@@ -25,19 +25,15 @@ in
     # fzf
     htop
     git
-    neovim
+    # neovim
     spotify
     starship
     zellij
     nerdfonts
-    # zsh
     zsh-syntax-highlighting
     zsh-fast-syntax-highlighting   
     zsh-autocomplete
     zsh-nix-shell
-    # zsh-abbrev-alias
-    # zsh-colored-man-pages
-    # zsh-fzf-tab
     lazygit
   ];
 
@@ -49,7 +45,7 @@ in
   # You can update Home Manager without changing this value. See
   # the Home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "23.05";
+  home.stateVersion = "23.11";
 
   nixpkgs = {
     config = {
@@ -119,4 +115,14 @@ in
     ];
   };
 
+  #programs.neovim = {
+  #  enable = true;
+  #  vimAlias = true;
+  #  vimdiffAlias = true;
+  #};
+
+  programs.neovim = {
+    enable = true;
+  };
+  xdg.configFile.nvim.source = ./nvim;
 }
