@@ -22,13 +22,13 @@ in
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
     bat
-    # fzf
+    fzf
     htop
     git
     # neovim
     spotify
     starship
-    zellij
+    # zellij
     nerdfonts
     zsh-syntax-highlighting
     zsh-fast-syntax-highlighting   
@@ -125,4 +125,9 @@ in
     enable = true;
   };
   xdg.configFile.nvim.source = ./nvim;
+  programs.zellij = {
+    enable = true;
+  };
+  # xdg.configFile.zellij.source = ./zellij.kdl;
+  xdg.configFile."zellij".source = ./zellij;
 }
