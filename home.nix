@@ -23,6 +23,7 @@ in
   home.packages = with pkgs; [
     bat
     fzf
+    fd
     htop
     git
     # neovim
@@ -35,6 +36,8 @@ in
     zsh-autocomplete
     zsh-nix-shell
     lazygit
+    exa
+    lf
   ];
 
   # This value determines the Home Manager release that your
@@ -90,6 +93,13 @@ in
     enable = true;
     enableAutosuggestions = true;
     enableCompletion = false;
+    shellAliases = {
+      g = "cd $(fd -H -t d . ~ | fzf)";
+      e = "g && nvim";
+      l = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
+      za = "alacritty --command \"zellij a $(zellij list-sessions | fzf)\"";
+      update = "home-manager switch";
+    };
     #oh-my-zsh = {
     #  enable = true;
     #  plugins = [ "git" "thefuck" ];
