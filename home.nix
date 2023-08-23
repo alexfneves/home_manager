@@ -16,8 +16,8 @@ in
 {
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
-  home.username = "alexfneves";
-  home.homeDirectory = "/home/alexfneves";
+  home.username = "afn";
+  home.homeDirectory = "/home/afn";
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
@@ -25,7 +25,7 @@ in
     fzf
     fd
     htop
-    git
+    gitFull
     # neovim
     spotify
     starship
@@ -38,6 +38,8 @@ in
     lazygit
     exa
     lf
+    google-chrome
+    firefox
   ];
 
   # This value determines the Home Manager release that your
