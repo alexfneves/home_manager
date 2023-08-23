@@ -40,6 +40,7 @@ in
     lf
     google-chrome
     firefox
+    vscode
   ];
 
   # This value determines the Home Manager release that your
@@ -96,11 +97,12 @@ in
     enableAutosuggestions = true;
     enableCompletion = false;
     shellAliases = {
-      g = "cd $(fd -H -t d . ~ | fzf)";
-      e = "g && nvim";
-      l = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
+      j = "cd $(fd -H -t d . ~ | fzf)";
+      e = "j && nvim";
+      gl = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
+      g = "lazygit";
       za = "alacritty --command \"zellij a $(zellij list-sessions | fzf)\"";
-      update = "home-manager switch";
+      u = "home-manager switch";
     };
     #oh-my-zsh = {
     #  enable = true;
