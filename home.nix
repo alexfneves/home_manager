@@ -37,7 +37,6 @@ in
     lazygit
     exa
     lf
-    helix
     clang
     clang-tools
     lldb
@@ -126,5 +125,39 @@ in
   programs.zellij = {
     enable = true;
   };
-  xdg.configFile."zellij".source = ./zellij; 
+  xdg.configFile."zellij".source = ./zellij;
+
+  programs.helix = {
+    enable = true;
+    package = pkgs.helix;
+    settings = {
+      theme = "onedark";
+      editor = {
+        line-number = "relative";
+        auto-save = true;
+        bufferline = "multiple";
+        color-modes = true;
+      };
+      editor.cursor-shape = {
+        insert = "bar";
+        normal = "block";
+        select = "underline";
+      };
+      editor.file-picker.hidden = false;
+      keys.normal = {
+        "tab" = ":bn";
+        "S-tab" = ":bp";
+      };
+      editor.whitespace.render.tab = "all";
+      editor.indent-guides.render = true;
+      editor.soft-wrap.enable = true;
+      # keys.normal = {
+      #   space.space = "file_picker";
+      #   space.w = ":w";
+      #   space.q = ":q";
+      #   esc = [ "collapse_selection" "keep_primary_selection" ];
+      # };
+    };
+  };
+
 }
