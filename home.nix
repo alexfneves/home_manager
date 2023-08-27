@@ -41,6 +41,7 @@ in
     clang
     clang-tools
     lldb
+    sshfs
   ];
 
   # This value determines the Home Manager release that your
@@ -89,12 +90,19 @@ in
     enableAutosuggestions = true;
     enableCompletion = false;
     shellAliases = {
-      g = "cd $(fd -H -t d . ~ | fzf)";
-      e = "g && hx";
-      l = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
+      j = "cd $(fd -H -t d . ~ | fzf)";
+      e = "j && nvim";
+      gl = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
+      g = "lazygit";
       za = "alacritty --command \"zellij a $(zellij list-sessions | fzf)\"";
-      update = "home-manager switch";
+      u = "home-manager switch";
     };
+    initExtra = ''
+      bindkey "''${key[Up]}" up-line-or-search
+      bindkey "^[[1;5C" forward-word
+      bindkey "^[[1;5D" backward-word
+      # bindkey -s "^A" "ls^M"
+    '';
     
     plugins = [
       {
