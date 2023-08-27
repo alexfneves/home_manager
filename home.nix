@@ -16,8 +16,8 @@ in
 {
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
-  home.username = "alexfneves";
-  home.homeDirectory = "/home/alexfneves";
+  home.username = "afn";
+  home.homeDirectory = "/home/afn";
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
@@ -26,7 +26,7 @@ in
     fzf
     fd
     htop
-    git
+    gitFull
     spotify
     starship
     nerdfonts
@@ -42,6 +42,9 @@ in
     clang-tools
     lldb
     sshfs
+    google-chrome
+    firefox
+    vscode
   ];
 
   # This value determines the Home Manager release that your
