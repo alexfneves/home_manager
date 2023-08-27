@@ -21,15 +21,14 @@ in
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
+    exa
     bat
     fzf
     fd
     htop
     git
-    # neovim
     spotify
     starship
-    # zellij
     nerdfonts
     zsh-syntax-highlighting
     zsh-fast-syntax-highlighting   
@@ -38,6 +37,10 @@ in
     lazygit
     exa
     lf
+    helix
+    clang
+    clang-tools
+    lldb
   ];
 
   # This value determines the Home Manager release that your
@@ -48,7 +51,7 @@ in
   # You can update Home Manager without changing this value. See
   # the Home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "23.11";
+  home.stateVersion = "23.05";
 
   nixpkgs = {
     config = {
@@ -76,35 +79,22 @@ in
           style = "Medium";
         };
       };
-
-      # key_bindings = [
-      #   {
-      #     key = "F11";
-      #     action = "ToogleFullscreen";
-      #   }
-      # ];
     };
   };
   programs.starship.enable = true;
   targets.genericLinux.enable = true;
 
   programs.zsh = {
-    # Your zsh config
     enable = true;
     enableAutosuggestions = true;
     enableCompletion = false;
     shellAliases = {
       g = "cd $(fd -H -t d . ~ | fzf)";
-      e = "g && nvim";
+      e = "g && hx";
       l = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
       za = "alacritty --command \"zellij a $(zellij list-sessions | fzf)\"";
       update = "home-manager switch";
     };
-    #oh-my-zsh = {
-    #  enable = true;
-    #  plugins = [ "git" "thefuck" ];
-    #  theme = "robbyrussell";
-    #};
     
     plugins = [
       {
@@ -125,19 +115,8 @@ in
     ];
   };
 
-  #programs.neovim = {
-  #  enable = true;
-  #  vimAlias = true;
-  #  vimdiffAlias = true;
-  #};
-
-  programs.neovim = {
-    enable = true;
-  };
-  xdg.configFile.nvim.source = ./nvim;
   programs.zellij = {
     enable = true;
   };
-  # xdg.configFile.zellij.source = ./zellij.kdl;
-  xdg.configFile."zellij".source = ./zellij;
+  xdg.configFile."zellij".source = ./zellij; 
 }
