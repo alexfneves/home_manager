@@ -35,6 +35,7 @@ in
     zsh-autocomplete
     zsh-nix-shell
     lazygit
+    gitui
     exa
     lf
     clang
@@ -44,6 +45,9 @@ in
     google-chrome
     firefox
     vscode
+    python310
+    python310Packages.python-lsp-server
+    python310Packages.debugpy
   ];
 
   # This value determines the Home Manager release that your
@@ -93,7 +97,7 @@ in
     enableCompletion = false;
     shellAliases = {
       j = "cd $(fd -H -t d . ~ | fzf)";
-      e = "j && nvim";
+      e = "j && hx";
       gl = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
       g = "lazygit";
       za = "alacritty --command \"zellij a $(zellij list-sessions | fzf)\"";
@@ -154,13 +158,64 @@ in
       editor.whitespace.render.tab = "all";
       editor.indent-guides.render = true;
       editor.soft-wrap.enable = true;
-      # keys.normal = {
+      keys.normal = {
       #   space.space = "file_picker";
       #   space.w = ":w";
       #   space.q = ":q";
-      #   esc = [ "collapse_selection" "keep_primary_selection" ];
-      # };
+        esc = [ "collapse_selection" "keep_primary_selection" ];
+      };
     };
+
+
+      languages.language = [
+        {
+          name = "nix";
+          language-server = {
+            command = "${pkgs.nil}/bin/nil";
+          };
+        }
+        {
+          name = "python";
+          language-server = {
+            command = "${pkgs.python311Packages.python-lsp-server}/bin/pylsp";
+          };
+        }
+        {
+          name = "rust";
+          language-server = {
+            command = "${pkgs.rust-analyzer}/bin/rust-analyzer";
+          };
+          config."rust-analyzer" = {
+            cargo = {
+              buildScripts = {
+                enable = true;
+              };
+            };
+            procMacro = {
+              enable = true;
+            };
+          };  
+        }
+        {
+          name = "latex";
+          config.texlab = {
+            build = {
+              onSave = true;
+              args = ["-xelatex" "-interaction=nonstopmode" "-synctex=1" "%f"];
+              #executable = "tectonic";
+              #args = [
+                #"-X"
+                #"compile"
+                #"%f"
+                #"--synctex"
+                #"--keep-logs"
+                #"--keep-intermediates"
+              #];
+            };
+          };
+        }
+      ];
+    
   };
 
 }
