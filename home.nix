@@ -45,9 +45,9 @@ in
     google-chrome
     firefox
     vscode
-    python310
-    python310Packages.python-lsp-server
-    python310Packages.debugpy
+    # python310
+    # python310Packages.python-lsp-server
+    # python310Packages.debugpy
   ];
 
   # This value determines the Home Manager release that your
@@ -98,8 +98,9 @@ in
     shellAliases = {
       j = "cd $(fd -H -t d . ~ | fzf)";
       e = "j && hx";
-      gl = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
       g = "lazygit";
+      gl = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
+      gk = "gitk --all";
       za = "alacritty --command \"zellij a $(zellij list-sessions | fzf)\"";
       u = "home-manager switch";
     };
