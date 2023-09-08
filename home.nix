@@ -42,7 +42,7 @@ in
     clang-tools
     lldb
     sshfs
-    google-chrome
+    # google-chrome
     firefox
     vscode
     # python310
