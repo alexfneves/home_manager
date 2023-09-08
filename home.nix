@@ -109,6 +109,8 @@ in
       bindkey "^[[1;5C" forward-word
       bindkey "^[[1;5D" backward-word
       # bindkey -s "^A" "ls^M"
+
+      source ~/.zsh_aliases
     '';
     
     plugins = [
@@ -129,6 +131,8 @@ in
       }     
     ];
   };
+
+  home.file.".zsh_aliases".source = ./.zsh_aliases;
 
   programs.zellij = {
     enable = true;

@@ -1,0 +1,48 @@
+gen_user_aliases() {
+    alias $1="cd $2/$1"
+    if [ -d "$2/$1/devel" ]; then # ROS1
+        alias s$1="source $2/$1/devel/setup.zsh"
+    elif [ -d "$2/$1/install" ]; then # ROS2
+        alias s$1="source $2/$1/install/setup.zsh"
+    fi
+}
+
+gen_root_aliases() {
+    alias $1="cd $2/$1"
+    alias s$1="source $2/$1/setup.zsh"
+}
+
+if [ -d "$HOME/bor" ]; then
+  PROJECTS="$(find $HOME/bor -maxdepth 3 -name "setup.zsh" | rev | cut -f 3 -d "/" | rev)"
+  for project in ${=PROJECTS}; do
+      gen_user_aliases "$project" "$HOME/bor"
+  done
+fi
+
+if [ -d "/opt/ros" ]; then
+  PROJECTS="$(find /opt/ros -maxdepth 3 -name "setup.zsh" | rev | cut -f 2 -d "/" | rev)"
+  for project in ${=PROJECTS}; do
+      gen_root_aliases "$project" "/opt/ros"
+  done
+fi
+
+# epoch time(sec) to date - `epocht 123456789` or `echo 123456789 | epocht`
+epocht() {
+    if [ -z $1 ]; then read ip; else ip=$1; fi
+    date -d @$ip +"%Y-%m-%d %T"
+}
+
+# for time in rostopics - `rostopic echo ... | rost`
+rost() {
+    perl -MPOSIX -ne 'if($_=~m/^(\s+)(n?secs:)\s+(\d+)/){
+        if($2 eq "secs:"){$p=$3}
+        else{print "$1\033[1;37m".strftime("%Y-%m-%d %H:%M:%S", localtime($p))."\033[0m\n"; $p=0}
+    }else{print $_; $p=0}'
+}
+
+# for time in ros logs - `journalctl -u seto --output cat | jrost` or `seto_simulation | jrost`
+jrost() { perl -MPOSIX -pe 's/\[(\d+)\.\d+\]/strftime("%Y-%m-%d %H:%M:%S", localtime($1))/e'; }
+
+alias gg='git gui'
+alias gk='gitk --all'
+alias u='distrobox enter u20tmp'
