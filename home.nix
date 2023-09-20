@@ -111,6 +111,7 @@ in
       # bindkey -s "^A" "ls^M"
 
       source ~/.zsh_aliases
+      PATH=/home/afn/.local/bin:$PATH
     '';
     
     plugins = [
