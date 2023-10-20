@@ -48,6 +48,7 @@ in
     # python310
     # python310Packages.python-lsp-server
     # python310Packages.debugpy
+    inotify-tools
   ];
 
   # This value determines the Home Manager release that your
