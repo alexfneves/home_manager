@@ -106,7 +106,7 @@ in
       u = "home-manager switch";
     };
     initExtra = ''
-      bindkey "''${key[Up]}" up-line-or-search
+      bindkey "^[[A" up-line-or-search
       bindkey "^[[1;5C" forward-word
       bindkey "^[[1;5D" backward-word
       # bindkey -s "^A" "ls^M"
