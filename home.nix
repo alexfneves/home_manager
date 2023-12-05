@@ -16,8 +16,6 @@ in
 {
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
-  home.username = "afn";
-  home.homeDirectory = "/home/afn";
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
@@ -96,6 +94,7 @@ in
     enable = true;
     enableAutosuggestions = true;
     enableCompletion = false;
+    completionInit = "autoload -U compinit && compinit -u";
     shellAliases = {
       j = "cd $(fd -H -t d . ~ | fzf)";
       e = "j && hx";
@@ -106,14 +105,13 @@ in
       u = "home-manager switch";
     };
     initExtra = ''
-      bindkey "''${key[Up]}" up-line-or-search
       bindkey "^[[A" up-line-or-search
       bindkey "^[[1;5C" forward-word
       bindkey "^[[1;5D" backward-word
       # bindkey -s "^A" "ls^M"
 
       source ~/.zsh_aliases
-      PATH=/home/afn/.local/bin:$PATH
+      PATH=/home/$USER/.local/bin:$PATH
     '';
     
     plugins = [

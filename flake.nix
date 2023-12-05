@@ -1,5 +1,5 @@
 {
-  description = "Home Manager configuration of afn";
+  description = "Home Manager configuration";
 
   inputs = {
     # Specify the source of Home Manager and Nixpkgs.
@@ -13,15 +13,22 @@
 
   outputs = { nixpkgs, home-manager, nixgl, ... }:
     let
+      username = "afn";
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system}.extend nixgl.overlay;
     in {
-      homeConfigurations."afn" = home-manager.lib.homeManagerConfiguration {
+      homeConfigurations."${username}" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 
         # Specify your home configuration modules here, for example,
         # the path to your home.nix.
-        modules = [ ./home.nix ];
+        modules = [
+          ./home.nix
+          {
+            home.username = "${username}";
+            home.homeDirectory = "/home/${username}";
+          }
+        ];
 
         # Optionally use extraSpecialArgs
         # to pass through arguments to home.nix
