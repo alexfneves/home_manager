@@ -107,6 +107,9 @@ in
       bindkey "^[[A" up-line-or-search
       bindkey "^[[1;5C" forward-word
       bindkey "^[[1;5D" backward-word
+      bindkey  "^[[H"   beginning-of-line
+      bindkey  "^[[F"   end-of-line
+      bindkey  "^[[3~"  delete-char
       # bindkey -s "^A" "ls^M"
 
       source ~/.zsh_aliases
