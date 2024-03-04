@@ -102,6 +102,7 @@ in
       g = "lazygit";
       gl = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
       gk = "gitk --all";
+      gg = "git gui";
       za = "alacritty --command \"zellij a $(zellij list-sessions | fzf)\"";
       u = "home-manager switch";
     };

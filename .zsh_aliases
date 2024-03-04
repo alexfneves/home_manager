@@ -42,7 +42,3 @@ rost() {
 
 # for time in ros logs - `journalctl -u seto --output cat | jrost` or `seto_simulation | jrost`
 jrost() { perl -MPOSIX -pe 's/\[(\d+)\.\d+\]/strftime("%Y-%m-%d %H:%M:%S", localtime($1))/e'; }
-
-alias gg='git gui'
-alias gk='gitk --all'
-alias u='distrobox enter u20tmp'
