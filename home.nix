@@ -19,6 +19,7 @@ in
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
+    meld
     pdfarranger
     yazi
     eza
@@ -139,6 +140,13 @@ in
   };
 
   home.file.".zsh_aliases".source = ./.zsh_aliases;
+
+  programs.git.package = pkgs.gitFull;
+  programs.git = {
+    enable = true;
+    userName  = "Alex Fernandes Neves";
+    userEmail = "afn@blue-ocean-robotics.com";
+  };
 
   programs.zellij = {
     enable = true;
