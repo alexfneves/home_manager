@@ -49,6 +49,7 @@ in
     # python310Packages.python-lsp-server
     # python310Packages.debugpy
     inotify-tools
+    xclip
   ];
 
   # This value determines the Home Manager release that your
