@@ -321,4 +321,28 @@ in
     
   };
 
+  programs.nixvim = {
+    enable = true;
+    defaultEditor = true;
+
+    globals = {
+      mapleader = " ";
+    };
+    keymaps =
+      [
+        {
+          key = "<leader>ff";
+          action = "<cmd>lua require('telescope.builtin').find_files()<CR>";
+        }
+      ];
+
+    colorschemes.catppuccin = {
+      enable = true;
+      flavour = "latte";
+    };
+
+    plugins.bufferline.enable = true;
+    plugins.lightline.enable = true;
+    plugins.telescope.enable = true;
+  };
 }

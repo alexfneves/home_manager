@@ -9,9 +9,13 @@
       url = "github:nix-community/home-manager/release-23.11";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixvim = {
+      url = "github:nix-community/nixvim/nixos-23.11";
+      # inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { nixpkgs, home-manager, nixgl, ... }:
+  outputs = { nixpkgs, home-manager, nixgl, nixvim, ... }:
     let
       username = "afn";
       system = "x86_64-linux";
@@ -24,6 +28,7 @@
         # the path to your home.nix.
         modules = [
           ./home.nix
+          nixvim.homeManagerModules.nixvim
           {
             home.username = "${username}";
             home.homeDirectory = "/home/${username}";
