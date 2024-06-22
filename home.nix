@@ -19,6 +19,7 @@ in
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
+    devbox
     shfmt
     meld
     pdfarranger
