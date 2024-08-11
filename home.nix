@@ -19,6 +19,8 @@ in
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
+    sshs
+    direnv
     pinta
     devbox
     shfmt
@@ -244,7 +246,7 @@ in
     enable = true;
     package = pkgs.helix;
     settings = {
-      theme = "onedark";
+      theme = "catppuccin_latte";
       editor = {
         line-number = "relative";
         auto-save = true;
@@ -271,57 +273,6 @@ in
         esc = [ "collapse_selection" "keep_primary_selection" ];
       };
     };
-
-
-      languages.language = [
-        {
-          name = "nix";
-          language-server = {
-            command = "${pkgs.nil}/bin/nil";
-          };
-        }
-        {
-          name = "python";
-          language-server = {
-            command = "${pkgs.python311Packages.python-lsp-server}/bin/pylsp";
-          };
-        }
-        {
-          name = "rust";
-          language-server = {
-            command = "${pkgs.rust-analyzer}/bin/rust-analyzer";
-          };
-          config."rust-analyzer" = {
-            cargo = {
-              buildScripts = {
-                enable = true;
-              };
-            };
-            procMacro = {
-              enable = true;
-            };
-          };  
-        }
-        {
-          name = "latex";
-          config.texlab = {
-            build = {
-              onSave = true;
-              args = ["-xelatex" "-interaction=nonstopmode" "-synctex=1" "%f"];
-              #executable = "tectonic";
-              #args = [
-                #"-X"
-                #"compile"
-                #"%f"
-                #"--synctex"
-                #"--keep-logs"
-                #"--keep-intermediates"
-              #];
-            };
-          };
-        }
-      ];
-    
   };
 
   programs.nixvim = {
