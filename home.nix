@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs, ... }:
 let
   # ...
   nixGLWrap = pkg: pkgs.runCommand "${pkg.name}-nixgl-wrapper" {} ''
@@ -19,6 +19,8 @@ in
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
+    inputs.devenv.packages."${pkgs.system}".devenv
+    cachix
     sshs
     direnv
     pinta
@@ -298,5 +300,10 @@ in
     plugins.bufferline.enable = true;
     plugins.lightline.enable = true;
     plugins.telescope.enable = true;
+  };
+
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
   };
 }

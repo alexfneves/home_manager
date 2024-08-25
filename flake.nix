@@ -13,13 +13,15 @@
       url = "github:nix-community/nixvim/nixos-23.11";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
+    devenv.url = "github:cachix/devenv/latest";
   };
 
-  outputs = { nixpkgs, home-manager, nixgl, nixvim, ... }:
+  outputs = { nixpkgs, home-manager, nixgl, nixvim, self, ... } @ inputs:
     let
       username = "afn";
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system}.extend nixgl.overlay;
+      inherit (self) outputs;
     in {
       homeConfigurations."${username}" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
@@ -34,6 +36,7 @@
             home.homeDirectory = "/home/${username}";
           }
         ];
+        extraSpecialArgs = {inherit inputs outputs;};
 
         # Optionally use extraSpecialArgs
         # to pass through arguments to home.nix
