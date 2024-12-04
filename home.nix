@@ -19,6 +19,7 @@ in
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
+    baobab
     inputs.devenv.packages."${pkgs.system}".devenv
     cachix
     sshs
