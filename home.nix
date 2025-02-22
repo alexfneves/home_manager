@@ -43,6 +43,7 @@ in
     zsh-fast-syntax-highlighting   
     zsh-autocomplete
     zsh-nix-shell
+    zsh-z
     lazygit
     gitui
     lf
@@ -68,7 +69,7 @@ in
   # You can update Home Manager without changing this value. See
   # the Home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "23.11";
+  home.stateVersion = "24.11";
 
   nixpkgs = {
     config = {
@@ -86,7 +87,7 @@ in
       window = {
         startup_mode = "Maximized";
       };
-      shell = {
+      terminal.shell = {
         program = "zsh";
         args = ["-l" "-c" "zellij"];
       };
@@ -184,9 +185,10 @@ in
   programs.starship.enable = true;
   targets.genericLinux.enable = true;
 
+  # zsh autcomplete from https://tesar.tech/blog/2024-10-21_nix_os_zsh_autocomplete
   programs.zsh = {
     enable = true;
-    enableAutosuggestions = true;
+    autosuggestion.enable = true;
     enableCompletion = false;
     completionInit = "autoload -U compinit && compinit -u";
     shellAliases = {
@@ -224,11 +226,34 @@ in
         src = "${pkgs.zsh-nix-shell}/share/zsh-nix-shell";
       }
       {
-        name = "zsh-autocomplete";
-        file = "zsh-autocomplete.plugin.zsh";
-        src = "${pkgs.zsh-autocomplete}/share/zsh-autocomplete";
-      }     
+        name = "zsh-autocomplete"; # completes history, commands, etc.
+        src = pkgs.fetchFromGitHub {
+          owner = "marlonrichert";
+          repo = "zsh-autocomplete";
+          rev = "762afacbf227ecd173e899d10a28a478b4c84a3f";
+          sha256 = "1357hygrjwj5vd4cjdvxzrx967f1d2dbqm2rskbz5z1q6jri1hm3";
+        }; # e.g., nix-prefetch-url --unpack https://github.com/marlonrichert/zsh-autocomplete/archive/762afacbf227ecd173e899d10a28a478b4c84a3f.tar.gz
+      }
     ];
+
+    oh-my-zsh = {
+      enable = true;
+      plugins = [ "z" ];
+      extraConfig = ''
+                # Required for autocomplete with box: https://unix.stackexchange.com/a/778868
+                zstyle ':completion:*' completer _expand _complete _ignored _approximate _expand_alias
+                zstyle ':autocomplete:*' default-context curcontext 
+                zstyle ':autocomplete:*' min-input 0
+
+                setopt HIST_FIND_NO_DUPS
+
+                autoload -Uz compinit
+                compinit
+
+                setopt autocd  # cd without writing 'cd'
+                setopt globdots # show dotfiles in autocomplete list
+      '';
+    };
   };
 
   home.file.".zsh_aliases".source = ./.zsh_aliases;
@@ -276,31 +301,6 @@ in
         esc = [ "collapse_selection" "keep_primary_selection" ];
       };
     };
-  };
-
-  programs.nixvim = {
-    enable = true;
-    defaultEditor = true;
-
-    globals = {
-      mapleader = " ";
-    };
-    keymaps =
-      [
-        {
-          key = "<leader>ff";
-          action = "<cmd>lua require('telescope.builtin').find_files()<CR>";
-        }
-      ];
-
-    colorschemes.catppuccin = {
-      enable = true;
-      flavour = "latte";
-    };
-
-    plugins.bufferline.enable = true;
-    plugins.lightline.enable = true;
-    plugins.telescope.enable = true;
   };
 
   programs.direnv = {

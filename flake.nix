@@ -3,20 +3,16 @@
 
   inputs = {
     # Specify the source of Home Manager and Nixpkgs.
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
     nixgl.url = "github:guibou/nixGL";
     home-manager = {
-      url = "github:nix-community/home-manager/release-23.11";
-      # inputs.nixpkgs.follows = "nixpkgs";
-    };
-    nixvim = {
-      url = "github:nix-community/nixvim/nixos-23.11";
+      url = "github:nix-community/home-manager/release-24.11";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
     devenv.url = "github:cachix/devenv/latest";
   };
 
-  outputs = { nixpkgs, home-manager, nixgl, nixvim, self, ... } @ inputs:
+  outputs = { nixpkgs, home-manager, nixgl, self, ... } @ inputs:
     let
       username = "afn";
       system = "x86_64-linux";
@@ -30,7 +26,6 @@
         # the path to your home.nix.
         modules = [
           ./home.nix
-          nixvim.homeManagerModules.nixvim
           {
             home.username = "${username}";
             home.homeDirectory = "/home/${username}";
