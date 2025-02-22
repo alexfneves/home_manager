@@ -266,7 +266,7 @@ in
   programs.git = {
     enable = true;
     userName  = "Alex Fernandes Neves";
-    userEmail = "afn@blue-ocean-robotics.com";
+    userEmail = "alexfneves@gmail.com";
   };
 
   programs.zellij = {

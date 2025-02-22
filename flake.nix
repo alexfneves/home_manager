@@ -14,7 +14,7 @@
 
   outputs = { nixpkgs, home-manager, nixgl, self, ... } @ inputs:
     let
-      username = "afn";
+      username = "alexfneves";
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system}.extend nixgl.overlay;
       inherit (self) outputs;
