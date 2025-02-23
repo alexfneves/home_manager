@@ -200,6 +200,9 @@ in
       gg = "git gui";
       za = "alacritty --command \"zellij a $(zellij list-sessions | fzf)\"";
       u = "home-manager switch";
+      mount = "host=$(cat ~/.ssh/config | grep -oP \"(?<=Host\\s)[^\\s]+\" | fzf) && mkdir -p /tmp/fs/\"$host\" && sshfs \"$host\": \"/tmp/fs/$host\"";
+      # unmount = "fusermount -u /tmp/fs/\"$(ls /tmp/fs/ | fzf)\"";
+      unmount = "host=$(ls /tmp/fs/ | fzf) && echo \"$host\" && fusermount -u /tmp/fs/\"$host\" && rmdir /tmp/fs/\"$host\"";
     };
     initExtra = ''
       bindkey "^[[A" up-line-or-search
