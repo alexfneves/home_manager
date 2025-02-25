@@ -47,8 +47,8 @@ in
     lazygit
     gitui
     lf
-    clang
-    clang-tools
+    # clang
+    # clang-tools
     lldb
     sshfs
     # google-chrome
@@ -59,6 +59,7 @@ in
     # python310Packages.debugpy
     inotify-tools
     xclip
+    nix-tree
   ];
 
   # This value determines the Home Manager release that your
