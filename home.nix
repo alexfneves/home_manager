@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, unstablePkgs, lib, inputs, ... }:
 let
   # ...
   nixGLWrap = pkg: pkgs.runCommand "${pkg.name}-nixgl-wrapper" {} ''
@@ -38,7 +38,8 @@ in
     gitFull
     spotify
     starship
-    nerdfonts
+    nerd-fonts.jetbrains-mono
+    nerd-fonts.fantasque-sans-mono
     zsh-syntax-highlighting
     zsh-fast-syntax-highlighting   
     zsh-autocomplete
@@ -60,6 +61,12 @@ in
     inotify-tools
     xclip
     nix-tree
+    unstablePkgs.freetube
+    unstablePkgs.grayjay
+    proton-pass
+    protonmail-desktop
+    protonvpn-gui
+    protonvpn-cli
   ];
 
   # This value determines the Home Manager release that your
@@ -70,7 +77,7 @@ in
   # You can update Home Manager without changing this value. See
   # the Home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "24.11";
+  home.stateVersion = "25.05";
 
   nixpkgs = {
     config = {
@@ -81,6 +88,7 @@ in
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
+  programs.brave.enable = true;
   programs.alacritty = {
 	  enable = true;
 	  package = nixGLWrap pkgs.alacritty;   
@@ -92,12 +100,14 @@ in
         program = "zsh";
         args = ["-l" "-c" "zellij"];
       };
-      font = {
-        normal = {
-          family = "JetBrainsMono Nerd Font";
-          style = "Medium";
-        };
-      };
+      # font = {
+      #   normal = {
+      #     # family = "JetBrainsMono";
+      #     # family = "IosevkaTerm Nerd Font";
+      #     family = "FantasqueSansMono";
+      #     style = "Medium";
+      #   };
+      # };
       colors = {
         # https://github.com/catppuccin/alacritty/blob/main/catppuccin-latte.toml
 
@@ -305,6 +315,11 @@ in
         esc = [ "collapse_selection" "keep_primary_selection" ];
       };
     };
+    languages.language = [{
+      name = "cpp";
+      auto-format = true;
+      formatter.command = "clang-format";
+    }];
   };
 
   programs.direnv = {
