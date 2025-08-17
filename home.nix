@@ -291,7 +291,11 @@ in
       theme = "catppuccin_latte";
       editor = {
         line-number = "relative";
-        auto-save = true;
+        auto-save = {
+          focus-lost = true;
+          after-delay.enable = true;
+          after-delay.timeout = 500;
+        };
         bufferline = "multiple";
         color-modes = true;
       };
