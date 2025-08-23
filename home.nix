@@ -39,7 +39,6 @@ in
     spotify
     starship
     nerd-fonts.jetbrains-mono
-    nerd-fonts.fantasque-sans-mono
     zsh-syntax-highlighting
     zsh-fast-syntax-highlighting   
     zsh-autocomplete
@@ -100,14 +99,12 @@ in
         program = "zsh";
         args = ["-l" "-c" "zellij"];
       };
-      # font = {
-      #   normal = {
-      #     # family = "JetBrainsMono";
-      #     # family = "IosevkaTerm Nerd Font";
-      #     family = "FantasqueSansMono";
-      #     style = "Medium";
-      #   };
-      # };
+      font = {
+        normal = {
+          family = "JetBrainsMonoNerdFontMono";
+          style = "Regular";
+        };
+      };
       colors = {
         # https://github.com/catppuccin/alacritty/blob/main/catppuccin-latte.toml
 
