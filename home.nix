@@ -22,6 +22,7 @@ in
     devenv
     inputs.llm-agents.packages.${pkgs.system}.pi
     # (pkgs.llama-cpp.override { cudaSupport = true; })
+    open-webui
     cachix
     sshs
     direnv
@@ -285,6 +286,38 @@ in
     settings = {
       color_theme = "gruvbox_light"; # Options: "Default", "nord", "monokai", "everforest", etc.
       theme_background = false;      # Set to false to let your terminal background show through
+    };
+  };
+
+  services.ollama = {
+    enable = true;
+    acceleration = "cuda";
+    package = pkgs.ollama-cuda;
+  };
+  systemd.user.services.open-webui = {
+    Unit = {
+      Description = "Open WebUI";
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
+    Service = {
+      Environment = [
+        "OLLAMA_API_BASE_URL=http://127.0.0.1:11434"
+        "DATA_DIR=%h/.local/share/open-webui"
+        "WEBUI_AUTH=False"
+        # Point the app to the local writable copy
+        "FRONTEND_BUILD_DIR=%h/.local/share/open-webui/static"
+      ];
+      # 1. Create the data dir
+      # 2. Copy static files to a writable location so the app stops complaining
+      ExecStartPre = pkgs.writeShellScript "open-webui-prep" ''
+        ${pkgs.coreutils}/bin/mkdir -p %h/.local/share/open-webui/static
+        ${pkgs.coreutils}/bin/cp -rn ${pkgs.open-webui}/lib/python3.13/site-packages/open_webui/static/* %h/.local/share/open-webui/static/
+        ${pkgs.coreutils}/bin/chmod -R +w %h/.local/share/open-webui/static
+      '';
+      ExecStart = "${pkgs.open-webui}/bin/open-webui serve";
+      Restart = "always";
     };
   };
 }
