@@ -3,14 +3,14 @@
 
   inputs = {
     # Specify the source of Home Manager and Nixpkgs.
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixgl.url = "github:guibou/nixGL";
     unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.05";
+      url = "github:nix-community/home-manager/release-25.11";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
-    devenv.url = "github:cachix/devenv/latest";
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
   outputs = { nixpkgs, unstable, home-manager, nixgl, self, ... } @ inputs:

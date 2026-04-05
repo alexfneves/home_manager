@@ -1,6 +1,5 @@
 { config, pkgs, unstablePkgs, lib, inputs, ... }:
 let
-  # ...
   nixGLWrap = pkg: pkgs.runCommand "${pkg.name}-nixgl-wrapper" {} ''
     mkdir $out
     ln -s ${pkg}/* $out
@@ -20,7 +19,9 @@ in
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
     baobab
-    inputs.devenv.packages."${pkgs.system}".devenv
+    devenv
+    inputs.llm-agents.packages.${pkgs.system}.pi
+    # (pkgs.llama-cpp.override { cudaSupport = true; })
     cachix
     sshs
     direnv
@@ -47,25 +48,16 @@ in
     lazygit
     gitui
     lf
-    # clang
-    # clang-tools
     lldb
     sshfs
-    # google-chrome
     firefox
     vscode
-    # python310
-    # python310Packages.python-lsp-server
-    # python310Packages.debugpy
     inotify-tools
     xclip
     nix-tree
-    unstablePkgs.freetube
-    unstablePkgs.grayjay
     proton-pass
     protonmail-desktop
     protonvpn-gui
-    protonvpn-cli
   ];
 
   # This value determines the Home Manager release that your
@@ -76,7 +68,7 @@ in
   # You can update Home Manager without changing this value. See
   # the Home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "25.05";
+  home.stateVersion = "25.11";
 
   nixpkgs = {
     config = {
@@ -197,8 +189,7 @@ in
   programs.zsh = {
     enable = true;
     autosuggestion.enable = true;
-    enableCompletion = false;
-    completionInit = "autoload -U compinit && compinit -u";
+    enableCompletion = true;
     shellAliases = {
       j = "cd $(fd -H -t d . ~ | fzf)";
       e = "j && hx";
@@ -212,7 +203,7 @@ in
       # unmount = "fusermount -u /tmp/fs/\"$(ls /tmp/fs/ | fzf)\"";
       unmount = "host=$(ls /tmp/fs/ | fzf) && echo \"$host\" && fusermount -u /tmp/fs/\"$host\" && rmdir /tmp/fs/\"$host\"";
     };
-    initExtra = ''
+    initContent = ''
       bindkey "^[[A" up-line-or-search
       bindkey "^[[1;5C" forward-word
       bindkey "^[[1;5D" backward-word
@@ -224,47 +215,6 @@ in
       source ~/.zsh_aliases
       PATH=/home/$USER/.local/bin:$PATH
     '';
-    
-    plugins = [
-      {
-        name = "fast-syntax-highlighting";
-        file = "fast-syntax-highlighting.plugin.zsh";
-        src = "${pkgs.zsh-fast-syntax-highlighting}/share/zsh/site-functions";
-      }
-      {
-        name = "zsh-nix-shell";
-        file = "nix-shell.plugin.zsh";
-        src = "${pkgs.zsh-nix-shell}/share/zsh-nix-shell";
-      }
-      {
-        name = "zsh-autocomplete"; # completes history, commands, etc.
-        src = pkgs.fetchFromGitHub {
-          owner = "marlonrichert";
-          repo = "zsh-autocomplete";
-          rev = "762afacbf227ecd173e899d10a28a478b4c84a3f";
-          sha256 = "1357hygrjwj5vd4cjdvxzrx967f1d2dbqm2rskbz5z1q6jri1hm3";
-        }; # e.g., nix-prefetch-url --unpack https://github.com/marlonrichert/zsh-autocomplete/archive/762afacbf227ecd173e899d10a28a478b4c84a3f.tar.gz
-      }
-    ];
-
-    oh-my-zsh = {
-      enable = true;
-      plugins = [ "z" ];
-      extraConfig = ''
-                # Required for autocomplete with box: https://unix.stackexchange.com/a/778868
-                zstyle ':completion:*' completer _expand _complete _ignored _approximate _expand_alias
-                zstyle ':autocomplete:*' default-context curcontext 
-                zstyle ':autocomplete:*' min-input 0
-
-                setopt HIST_FIND_NO_DUPS
-
-                autoload -Uz compinit
-                compinit
-
-                setopt autocd  # cd without writing 'cd'
-                setopt globdots # show dotfiles in autocomplete list
-      '';
-    };
   };
 
   home.file.".zsh_aliases".source = ./.zsh_aliases;
@@ -272,8 +222,10 @@ in
   programs.git.package = pkgs.gitFull;
   programs.git = {
     enable = true;
-    userName  = "Alex Fernandes Neves";
-    userEmail = "alexfneves@gmail.com";
+    settings.user = {
+      name  = "Alex Fernandes Neves";
+      email = "alexfneves@gmail.com";
+    };
   };
 
   programs.zellij = {
@@ -326,5 +278,13 @@ in
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
+  };
+
+  programs.btop = {
+    enable = true;
+    settings = {
+      color_theme = "gruvbox_light"; # Options: "Default", "nord", "monokai", "everforest", etc.
+      theme_background = false;      # Set to false to let your terminal background show through
+    };
   };
 }
