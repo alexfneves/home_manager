@@ -21,6 +21,7 @@ in
     baobab
     devenv
     inputs.llm-agents.packages.${pkgs.system}.pi
+    nodejs # pi needs to download stuff
     # (pkgs.llama-cpp.override { cudaSupport = true; })
     open-webui
     cachix
@@ -37,6 +38,7 @@ in
     fzf
     fd
     htop
+    nvtopPackages.full
     gitFull
     spotify
     starship
@@ -83,7 +85,7 @@ in
   programs.brave.enable = true;
   programs.alacritty = {
 	  enable = true;
-	  package = nixGLWrap pkgs.alacritty;   
+	  package = pkgs.alacritty;
     settings = {
       window = {
         startup_mode = "Maximized";
@@ -292,7 +294,7 @@ in
   services.ollama = {
     enable = true;
     acceleration = "cuda";
-    package = pkgs.ollama-cuda;
+    package = unstablePkgs.ollama-cuda;
   };
   systemd.user.services.open-webui = {
     Unit = {
