@@ -296,6 +296,10 @@ in
     acceleration = "cuda";
     package = unstablePkgs.ollama-cuda;
   };
+  systemd.user.services.ollama.Service.Environment = [
+    # "OLLAMA_NUM_PARALLEL=4"
+    "OLLAMA_CONTEXT_LENGTH=64000"
+  ];
   systemd.user.services.open-webui = {
     Unit = {
       Description = "Open WebUI";
