@@ -20,8 +20,9 @@ in
   home.packages = with pkgs; [
     baobab
     devenv
-    inputs.llm-agents.packages.${pkgs.system}.pi
-    nodejs # pi needs to download stuff
+    # inputs.llm-agents.packages.${pkgs.system}.pi
+    ffmpeg # pi-listen
+    nodejs # pi
     # (pkgs.llama-cpp.override { cudaSupport = true; })
     open-webui
     cachix
@@ -217,6 +218,7 @@ in
 
       source ~/.zsh_aliases
       PATH=/home/$USER/.local/bin:$PATH
+      source ~/.zshenv.local
     '';
   };
 
@@ -318,12 +320,26 @@ in
       # 1. Create the data dir
       # 2. Copy static files to a writable location so the app stops complaining
       ExecStartPre = pkgs.writeShellScript "open-webui-prep" ''
-        ${pkgs.coreutils}/bin/mkdir -p %h/.local/share/open-webui/static
-        ${pkgs.coreutils}/bin/cp -rn ${pkgs.open-webui}/lib/python3.13/site-packages/open_webui/static/* %h/.local/share/open-webui/static/
-        ${pkgs.coreutils}/bin/chmod -R +w %h/.local/share/open-webui/static
+        ${pkgs.coreutils}/bin/mkdir -p "$HOME/.local/share/open-webui/static"
+        ${pkgs.coreutils}/bin/cp -rn ${pkgs.open-webui}/lib/python3.13/site-packages/open_webui/static/* "$HOME/.local/share/open-webui/static/"
+        ${pkgs.coreutils}/bin/chmod -R +w "$HOME/.local/share/open-webui/static"
       '';
       ExecStart = "${pkgs.open-webui}/bin/open-webui serve";
       Restart = "always";
     };
   };
+
+  # Because npm (installed with pkgs.nodejs_20) lives in /nix/store, nothing can be installed globally. We need to change the default npm configuration to install npm packages with -g
+  home.sessionVariables = {
+    # Use the Nix variable instead of the shell string
+    npm_config_prefix = "${config.home.homeDirectory}/.npm-global";
+  };
+
+  home.sessionPath = [
+    "${config.home.homeDirectory}/.npm-global/bin"
+  ];
+
+  home.file.".npmrc".text = ''
+    prefix=${config.home.homeDirectory}/.npm-global
+  '';
 }
