@@ -24,6 +24,10 @@ in
     ffmpeg # pi-listen
     nodejs # pi
     # (pkgs.llama-cpp.override { cudaSupport = true; })
+    unstablePkgs.llama-cpp-rocm
+    rocmPackages.rocminfo
+    rocmPackages.rocm-smi
+    # vllm
     open-webui
     cachix
     sshs
@@ -62,6 +66,12 @@ in
     proton-pass
     protonmail-desktop
     protonvpn-gui
+    uv
+    python3
+    steam
+    obs-studio
+    vlc
+    wget
   ];
 
   # This value determines the Home Manager release that your
@@ -72,7 +82,7 @@ in
   # You can update Home Manager without changing this value. See
   # the Home Manager release notes for a list of state version
   # changes in each release.
-  home.stateVersion = "25.11";
+  home.stateVersion = "26.05";
 
   nixpkgs = {
     config = {
@@ -240,6 +250,7 @@ in
 
   programs.helix = {
     enable = true;
+    defaultEditor = true;
     package = pkgs.helix;
     settings = {
       theme = "catppuccin_latte";
@@ -295,12 +306,25 @@ in
 
   services.ollama = {
     enable = true;
-    acceleration = "cuda";
-    package = unstablePkgs.ollama-cuda;
+    acceleration = "rocm";
+    package = unstablePkgs.ollama-rocm;
+    # package = pkgs.ollama-rocm;
+    # For Strix Halo (gfx1150/1151), we still need the spoof 
+    # to make the ROCm stack recognize the brand-new iGPU
+    host = "0.0.0.0"; # Allows connections from other devices
+    environmentVariables = {
+      # HSA_OVERRIDE_GFX_VERSION = "11.0.0";
+      # OLLAMA_LLM_LIBRARY = "rocm";
+      HSA_OVERRIDE_GFX_VERSION = "11.5.1";
+      # HCC_AMDGPU_TARGET = "gfx1151";
+      # GGML_ROCM_ENABLE_UNIFIED_MEMORY = "1";
+      HSA_ENABLE_SDMA = "0";
+    };
   };
   systemd.user.services.ollama.Service.Environment = [
     # "OLLAMA_NUM_PARALLEL=4"
     "OLLAMA_CONTEXT_LENGTH=64000"
+    "OLLAMA_FLASH_ATTENTION=1"
   ];
   systemd.user.services.open-webui = {
     Unit = {
@@ -316,6 +340,7 @@ in
         "WEBUI_AUTH=False"
         # Point the app to the local writable copy
         "FRONTEND_BUILD_DIR=%h/.local/share/open-webui/static"
+        "HOST=0.0.0.0"
       ];
       # 1. Create the data dir
       # 2. Copy static files to a writable location so the app stops complaining
@@ -333,6 +358,8 @@ in
   home.sessionVariables = {
     # Use the Nix variable instead of the shell string
     npm_config_prefix = "${config.home.homeDirectory}/.npm-global";
+    EDITOR = "hx";
+    VISUAL = "hx";
   };
 
   home.sessionPath = [
