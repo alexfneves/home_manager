@@ -329,23 +329,28 @@ in
     environmentVariables = {
       # HSA_OVERRIDE_GFX_VERSION = "11.0.0";
       # OLLAMA_LLM_LIBRARY = "rocm";
-      HSA_OVERRIDE_GFX_VERSION = "11.5.1";
+      # HSA_OVERRIDE_GFX_VERSION = "11.5.1";
       # HCC_AMDGPU_TARGET = "gfx1151";
       # GGML_ROCM_ENABLE_UNIFIED_MEMORY = "1";
       HSA_ENABLE_SDMA = "0";
     };
   };
+  # systemd.user.services.ollama.Install.WantedBy = [ "basic.target" ];
   systemd.user.services.ollama.Service.Environment = [
-    # "OLLAMA_NUM_PARALLEL=4"
-    "OLLAMA_CONTEXT_LENGTH=64000"
+    "OLLAMA_NUM_PARALLEL=4"
+    # "OLLAMA_CONTEXT_LENGTH=64000"
+    "OLLAMA_CONTEXT_LENGTH=128000"
     "OLLAMA_FLASH_ATTENTION=1"
   ];
   systemd.user.services.open-webui = {
     Unit = {
       Description = "Open WebUI";
+      # After = [ "ollama.service" ];
+      # Requires = [ "ollama.service" ];
     };
     Install = {
       WantedBy = [ "default.target" ];
+      # WantedBy = [ "basic.target" ];
     };
     Service = {
       Environment = [
