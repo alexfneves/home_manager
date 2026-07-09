@@ -203,7 +203,9 @@ in
   programs.zsh = {
     enable = true;
     autosuggestion.enable = true;
-    enableCompletion = true;
+    enableCompletion = false; # maybe this is necessary for the plugin to work
+    syntaxHighlighting.enable = true;
+    completionInit = "autoload -U compinit && compinit -u";
     shellAliases = {
       j = "cd $(fd -H -t d . ~ | fzf)";
       e = "j && hx";
@@ -230,6 +232,18 @@ in
       PATH=/home/$USER/.local/bin:$PATH
       source ~/.zshenv.local
     '';
+
+    plugins = [
+      {
+        name = "zsh-autocomplete";
+        src = pkgs.fetchFromGitHub {
+          owner = "marlonrichert";
+          repo = "zsh-autocomplete";
+          rev = "25.03.19";
+          sha256 = "sha256-/6V6IHwB5p0GT1u5SAiUa20LjFDSrMo731jFBq/bnpw=";
+        };
+      }
+    ];
   };
 
   home.file.".zsh_aliases".source = ./.zsh_aliases;
