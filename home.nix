@@ -193,7 +193,7 @@ in
     enableCompletion = false;
     completionInit = "autoload -U compinit && compinit -u";
     shellAliases = {
-      j = "cd $(fd -H -t d . ~ | fzf)";
+      j = "cd $(fd -H -I -t d . ~ | fzf)";
       e = "j && hx";
       g = "lazygit";
       gl = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
