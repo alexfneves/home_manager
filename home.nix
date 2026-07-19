@@ -303,18 +303,21 @@ in
         select = "underline";
       };
       editor.file-picker.hidden = false;
-      keys.normal = {
-        "tab" = ":bn";
-        "S-tab" = ":bp";
-      };
       editor.whitespace.render.tab = "all";
       editor.indent-guides.render = true;
       editor.soft-wrap.enable = true;
+      editor.default-yank-register = "+";
       keys.normal = {
       #   space.space = "file_picker";
       #   space.w = ":w";
       #   space.q = ":q";
         esc = [ "collapse_selection" "keep_primary_selection" ];
+        "tab" = ":bn";
+        "S-tab" = ":bp";
+        "d" = "delete_selection_noyank";
+        "c" = "change_selection_noyank";
+        "A-d" = "delete_selection";
+        "A-c" = "change_selection";
       };
     };
     languages.language = [{
@@ -327,6 +330,7 @@ in
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
+    silent = true;
   };
 
   programs.btop = {
@@ -351,16 +355,22 @@ in
       # HSA_OVERRIDE_GFX_VERSION = "11.5.1";
       # HCC_AMDGPU_TARGET = "gfx1151";
       # GGML_ROCM_ENABLE_UNIFIED_MEMORY = "1";
+      # Tell ROCm to aggressively utilize unified system memory
+      HSA_AMD_SYSTEM_RESOURCES = "1";
       HSA_ENABLE_SDMA = "0";
     };
   };
   # systemd.user.services.ollama.Install.WantedBy = [ "basic.target" ];
-  systemd.user.services.ollama.Service.Environment = [
-    "OLLAMA_NUM_PARALLEL=4"
-    # "OLLAMA_CONTEXT_LENGTH=64000"
-    "OLLAMA_CONTEXT_LENGTH=128000"
-    "OLLAMA_FLASH_ATTENTION=1"
-  ];
+  systemd.user.services.ollama = {
+    Install.WantedBy = [ "graphical-session.target" ];
+    Service.Environment = [
+      "OLLAMA_NUM_PARALLEL=4"
+      "OLLAMA_MAX_LOADED_MODELS=4" # Allows up to 4 models in memory at once
+      # "OLLAMA_CONTEXT_LENGTH=64000"
+      "OLLAMA_CONTEXT_LENGTH=128000"
+      "OLLAMA_FLASH_ATTENTION=1"
+    ];
+  };
   systemd.user.services.open-webui = {
     Unit = {
       Description = "Open WebUI";
