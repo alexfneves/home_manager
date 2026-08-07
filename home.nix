@@ -72,6 +72,10 @@ in
     obs-studio
     vlc
     wget
+    ncdu
+    podman
+    distrobox
+    unstablePkgs.herdr
   ];
 
   # This value determines the Home Manager release that your
