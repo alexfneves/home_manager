@@ -1,0 +1,11 @@
+onboarding = false
+[terminal]
+default_shell = "zsh"
+shell_mode = "auto" # Starts a login shell on macOS (runs .zprofile/.zshrc)
+
+[theme]
+name = "catppuccin-latte"
+auto_switch = false
+
+[ui]
+agent_panel_sort = "spaces"
