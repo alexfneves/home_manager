@@ -9,3 +9,15 @@ auto_switch = false
 
 [ui]
 agent_panel_sort = "spaces"
+
+[keys]
+focus_pane_left = ["prefix+h", "alt+h", "alt+left"]
+focus_pane_down  = ["prefix+j", "alt+j", "alt+down"]
+focus_pane_up    = ["prefix+k", "alt+k", "alt+up"]
+focus_pane_right = ["prefix+l", "alt+l", "alt+right"]
+swap_pane_left   = ["prefix+shift+h", "alt+shift+h"]
+swap_pane_down   = ["prefix+shift+j", "alt+shift+j"]
+swap_pane_up     = ["prefix+shift+k", "alt+shift+k"]
+swap_pane_right  = ["prefix+shift+l", "alt+shift+l"]
+next_tab   = ["prefix+n", "ctrl+tab"]
+previous_tab = ["prefix+p", "ctrl+shift+tab"]
