@@ -1,5 +1,5 @@
 {
-  description = "Home Manager configuration";
+  description = "Home Manager configuration — unified across machines";
 
   inputs = {
     # Specify the source of Home Manager and Nixpkgs.
@@ -10,14 +10,20 @@
       url = "github:nix-community/home-manager/release-26.05";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
-    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
   outputs = { nixpkgs, unstable, home-manager, nixgl, self, ... } @ inputs:
     let
-      username = "alexfneves";
       system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system}.extend nixgl.overlay;
+
+      pkgs = (import nixpkgs {
+        inherit system;
+        config = {
+          allowUnfree = true;
+          allowUnfreePredicate = _: true;
+        };
+      }).extend nixgl.overlay;
+
       unstablePkgs = import unstable {
         inherit system;
         config = {
@@ -25,27 +31,65 @@
           allowUnfreePredicate = _: true;
         };
       };
-      inherit (self) outputs;
-    in {
-      homeConfigurations."${username}" = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
 
-        # Specify your home configuration modules here, for example,
-        # the path to your home.nix.
-        modules = [
-          ./home.nix
-          {
-            home.username = "${username}";
-            home.homeDirectory = "/home/${username}";
-          }
-        ];
-        extraSpecialArgs = {
-          inherit inputs outputs;
-          unstablePkgs = unstablePkgs;
+      # Build a home-manager configuration for a single machine.
+      #
+      # hostConfig (passed to home.nix) carries everything that differs
+      # between machines:
+      #   username / email        -> user identity
+      #   isNixOS                 -> genericLinux target (Ubuntu etc.)
+      #   useNixGL                -> wrap GUI binaries through nixGL (old GPUs/Ubuntu)
+      #   enableLlm               -> ROCm stack: ollama, llama-cpp, open-webui
+      #   extraPackages           -> extra plain nixpkgs packages for this host
+      #   extraUnstablePkgs       -> extra unstable-channel packages for this host
+      mkHome = { username, email, isNixOS, useNixGL, enableLlm
+               , extraPackages ? [], extraUnstablePkgs ? [] }:
+        home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+
+          modules = [
+            ./home.nix
+            {
+              home.username = username;
+              home.homeDirectory = "/home/${username}";
+            }
+          ];
+          extraSpecialArgs = {
+            inherit inputs unstablePkgs;
+            hostConfig = {
+              inherit username email isNixOS useNixGL enableLlm
+                       extraPackages extraUnstablePkgs;
+            };
+          };
+        };
+    in {
+      homeConfigurations = {
+        # --- Home machine: Strix Halo, NixOS (latest) ---
+        alexfneves = mkHome {
+          username = "alexfneves";
+          email = "alexfneves@gmail.com";
+          isNixOS = true;
+          useNixGL = false;
+          enableLlm = true; # ROCm stack: ollama, llama-cpp, open-webui
+          extraPackages = with pkgs; [
+            steam
+            obs-studio
+            vlc
+            proton-pass
+            protonmail-desktop
+            proton-vpn
+            nvtopPackages.full
+          ];
         };
 
-        # Optionally use extraSpecialArgs
-        # to pass through arguments to home.nix
+        # --- Work machine: Ubuntu 20, genericLinux, old GPU → needs nixGL ---
+        afn = mkHome {
+          username = "afn";
+          email = "afn@blue-ocean-robotics.com";
+          isNixOS = false;
+          useNixGL = true; # wrap GUI binaries for the old Ubuntu GL stack
+          enableLlm = false; # no ROCm / LLM stack on the work machine
+        };
       };
     };
 }

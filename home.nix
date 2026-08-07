@@ -1,4 +1,4 @@
-{ config, pkgs, unstablePkgs, lib, inputs, ... }:
+{ config, pkgs, unstablePkgs, lib, inputs, hostConfig, ... }:
 let
   nixGLWrap = pkg: pkgs.runCommand "${pkg.name}-nixgl-wrapper" {} ''
     mkdir $out
@@ -20,15 +20,8 @@ in
   home.packages = with pkgs; [
     baobab
     devenv
-    # inputs.llm-agents.packages.${pkgs.system}.pi
     ffmpeg # pi-listen
     nodejs # pi
-    # (pkgs.llama-cpp.override { cudaSupport = true; })
-    unstablePkgs.llama-cpp-rocm
-    rocmPackages.rocminfo
-    rocmPackages.rocm-smi
-    # vllm
-    open-webui
     cachix
     sshs
     direnv
@@ -76,7 +69,16 @@ in
     podman
     distrobox
     unstablePkgs.herdr
-  ];
+  ]
+  # Machine-specific packages (ROCm/LLM stack, etc.)
+  ++ (if hostConfig.enableLlm then with pkgs; [
+    unstablePkgs.llama-cpp-rocm
+    rocmPackages.rocminfo
+    rocmPackages.rocm-smi
+    open-webui
+  ] else [])
+  ++ hostConfig.extraPackages
+  ++ hostConfig.extraUnstablePkgs;
 
   # This value determines the Home Manager release that your
   # configuration is compatible with. This helps avoid breakage
@@ -100,7 +102,9 @@ in
   programs.brave.enable = true;
   programs.alacritty = {
 	  enable = true;
-	  package = pkgs.alacritty;
+	  # On Ubuntu/old-GPU machines the GL stack lives outside Nix, so wrap
+	  # through nixGL. On NixOS (home machine) use the plain binary.
+	  package = if hostConfig.useNixGL then nixGLWrap pkgs.alacritty else pkgs.alacritty;
     settings = {
       window = {
         startup_mode = "Maximized";
@@ -201,7 +205,7 @@ in
     };
   };
   programs.starship.enable = true;
-  targets.genericLinux.enable = true;
+  targets.genericLinux.enable = !hostConfig.isNixOS;
 
   # zsh autcomplete from https://tesar.tech/blog/2024-10-21_nix_os_zsh_autocomplete
   programs.zsh = {
@@ -276,7 +280,7 @@ in
     enable = true;
     settings.user = {
       name  = "Alex Fernandes Neves";
-      email = "alexfneves@gmail.com";
+      email = hostConfig.email;
     };
   };
 
@@ -345,12 +349,13 @@ in
     };
   };
 
-  services.ollama = {
+  # ---- ROCm / LLM stack (home machine only: hostConfig.enableLlm) ----
+  services.ollama = lib.mkIf hostConfig.enableLlm {
     enable = true;
     acceleration = "rocm";
     package = unstablePkgs.ollama-rocm;
     # package = pkgs.ollama-rocm;
-    # For Strix Halo (gfx1150/1151), we still need the spoof 
+    # For Strix Halo (gfx1150/1151), we still need the spoof
     # to make the ROCm stack recognize the brand-new iGPU
     host = "0.0.0.0"; # Allows connections from other devices
     environmentVariables = {
@@ -365,7 +370,7 @@ in
     };
   };
   # systemd.user.services.ollama.Install.WantedBy = [ "basic.target" ];
-  systemd.user.services.ollama = {
+  systemd.user.services.ollama = lib.mkIf hostConfig.enableLlm {
     Install.WantedBy = [ "graphical-session.target" ];
     Service.Environment = [
       "OLLAMA_NUM_PARALLEL=4"
@@ -375,7 +380,7 @@ in
       "OLLAMA_FLASH_ATTENTION=1"
     ];
   };
-  systemd.user.services.open-webui = {
+  systemd.user.services.open-webui = lib.mkIf hostConfig.enableLlm {
     Unit = {
       Description = "Open WebUI";
       # After = [ "ollama.service" ];
