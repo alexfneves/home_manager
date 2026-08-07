@@ -1,0 +1,9 @@
+{ pkgs }:
+{
+  hostname = "afn";
+  username = "afn";
+  email = "afn@blue-ocean-robotics.com";
+  isNixOS = false;
+  useNixGL = true;
+  enableLlm = false;
+}

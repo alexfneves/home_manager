@@ -42,7 +42,7 @@
       #   enableLlm               -> ROCm stack: ollama, llama-cpp, open-webui
       #   extraPackages           -> extra plain nixpkgs packages for this host
       #   extraUnstablePkgs       -> extra unstable-channel packages for this host
-      mkHome = { username, email, isNixOS, useNixGL, enableLlm
+      mkHome = { username, hostname, email, isNixOS, useNixGL, enableLlm
                , extraPackages ? [], extraUnstablePkgs ? [] }:
         home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
@@ -57,39 +57,20 @@
           extraSpecialArgs = {
             inherit inputs unstablePkgs;
             hostConfig = {
-              inherit username email isNixOS useNixGL enableLlm
+              inherit username hostname email isNixOS useNixGL enableLlm
                        extraPackages extraUnstablePkgs;
             };
           };
         };
+    in let
+      hosts = {
+        gmktec = import ./hosts/gmktec.nix { inherit pkgs; };
+        work-notebook = import ./hosts/work-notebook.nix { inherit pkgs; };
+      };
     in {
       homeConfigurations = {
-        # --- Home machine: Strix Halo, NixOS (latest) ---
-        alexfneves = mkHome {
-          username = "alexfneves";
-          email = "alexfneves@gmail.com";
-          isNixOS = true;
-          useNixGL = false;
-          enableLlm = true; # ROCm stack: ollama, llama-cpp, open-webui
-          extraPackages = with pkgs; [
-            steam
-            obs-studio
-            vlc
-            proton-pass
-            protonmail-desktop
-            proton-vpn
-            nvtopPackages.full
-          ];
-        };
-
-        # --- Work machine: Ubuntu 20, genericLinux, old GPU → needs nixGL ---
-        afn = mkHome {
-          username = "afn";
-          email = "afn@blue-ocean-robotics.com";
-          isNixOS = false;
-          useNixGL = true; # wrap GUI binaries for the old Ubuntu GL stack
-          enableLlm = false; # no ROCm / LLM stack on the work machine
-        };
+        "${hosts.gmktec.username}@${hosts.gmktec.hostname}" = mkHome hosts.gmktec;
+        "${hosts.work-notebook.username}@${hosts.work-notebook.hostname}" = mkHome hosts.work-notebook;
       };
     };
 }
