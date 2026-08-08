@@ -52,6 +52,7 @@
     ncdu
     podman
     distrobox
+    spotatui
     unstablePkgs.herdr
   ]
   # Machine-specific packages (ROCm/LLM stack, etc.)
