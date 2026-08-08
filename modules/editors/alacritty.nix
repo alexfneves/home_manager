@@ -24,7 +24,7 @@ in
       };
       terminal.shell = {
         program = "zsh";
-        args = ["-l" "-c" "zellij"];
+        args = ["-l" "-c" "herdr_cycle() { local n=\"herdr_$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 8 | head -n 1)\"; herdr session attach \"$n\" && herdr session stop \"$n\" && herdr session delete \"$n\"; echo \"Done with session: $n\"; }; herdr_cycle"];
       };
       font = {
         normal = {

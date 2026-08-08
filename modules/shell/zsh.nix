@@ -14,7 +14,6 @@
       gl = "git log --graph --decorate --pretty=oneline --abbrev-commit --all";
       gk = "gitk --all";
       gg = "git gui";
-      za = "alacritty --command \"zellij a $(zellij list-sessions | fzf)\"";
       u = "home-manager switch";
       mount = "host=$(cat ~/.ssh/config | grep -oP \"(?<=Host\\s)[^\\s]+\" | fzf) && mkdir -p /tmp/fs/\"$host\" && sshfs \"$host\": \"/tmp/fs/$host\"";
       # unmount = "fusermount -u /tmp/fs/\"$(ls /tmp/fs/ | fzf)\"";

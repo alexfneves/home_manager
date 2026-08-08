@@ -13,7 +13,6 @@
     ./modules/editors/helix.nix
     ./modules/editors/alacritty.nix
     ./modules/git.nix
-    ./modules/zellij.nix
     ./modules/llm.nix
     ./modules/session.nix
     ./modules/activation.nix
