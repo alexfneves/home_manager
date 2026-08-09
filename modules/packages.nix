@@ -22,7 +22,6 @@
     htop
     nvtopPackages.full
     gitFull
-    spotify
     starship
     nerd-fonts.jetbrains-mono
     zsh-syntax-highlighting

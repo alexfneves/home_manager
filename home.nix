@@ -5,6 +5,7 @@
   # special args (hostConfig, unstablePkgs) from flake.nix automatically.
   imports = [
     ./modules/packages.nix
+    ./modules/spotatui.nix
     ./modules/programs.nix
     ./modules/shell/zsh.nix
     ./modules/shell/starship.nix

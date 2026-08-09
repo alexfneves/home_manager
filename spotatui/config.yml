@@ -66,7 +66,7 @@ behavior:
   playbar_height_rows: 6
   library_height_percent: 30
   startup_behavior: continue
-  disable_auto_update: false
+  disable_auto_update: true
   auto_update_delay: '0'
   keepawake_enabled: true
 theme:
