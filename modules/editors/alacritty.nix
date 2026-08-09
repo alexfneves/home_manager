@@ -1,4 +1,4 @@
-{ pkgs, lib, hostConfig, ... }:
+{ pkgs, lib, hostConfig, config, ... }:
 let
   nixGLWrap = pkg: pkgs.runCommand "${pkg.name}-nixgl-wrapper" {} ''
     mkdir $out
@@ -23,8 +23,10 @@ in
         startup_mode = "Maximized";
       };
       terminal.shell = {
-        program = "zsh";
-        args = ["-l" "-c" "herdr_cycle() { local n=\"herdr_$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 8 | head -n 1)\"; herdr session attach \"$n\" && herdr session stop \"$n\" && herdr session delete \"$n\"; echo \"Done with session: $n\"; }; herdr_cycle"];
+        # herdr-cycle: fresh session, or attach/delete menu (see
+        # herdr/herdr-cycle.sh, symlinked to ~/.local/bin by activation.nix).
+        # Absolute path so no PATH assumptions are needed here.
+        program = "${config.home.homeDirectory}/.local/bin/herdr-cycle";
       };
       font = {
         normal = {
