@@ -1,11 +1,13 @@
-{ pkgs, lib, unstablePkgs, hostConfig, ... }:
+{ pkgs, lib, unstablePkgs, ollamaRocmGit, hostConfig, ... }:
 {
   # ---- ROCm / LLM stack (home machine only: hostConfig.enableLlm) ----
   services.ollama = lib.mkIf hostConfig.enableLlm {
     enable = true;
     acceleration = "rocm";
-    package = unstablePkgs.ollama-rocm;
-    # package = pkgs.ollama-rocm;
+    package =
+      if (hostConfig.ollamaSource or "nixpkgs") == "git"
+      then ollamaRocmGit          # latest from GitHub
+      else unstablePkgs.ollama-rocm; # stable nixpkgs-unstable build
     # For Strix Halo (gfx1150/1151), we still need the spoof
     # to make the ROCm stack recognize the brand-new iGPU
     host = "0.0.0.0"; # Allows connections from other devices

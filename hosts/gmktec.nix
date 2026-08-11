@@ -6,6 +6,10 @@
   isNixOS = true;
   useNixGL = false;
   enableLlm = true;
+  # Which ollama-rocm to run:
+  #   "nixpkgs" -> nixpkgs-unstable build (stable, tested)
+  #   "git"     -> latest from GitHub (bleeding edge, may crash — easy to flip back)
+  ollamaSource = "git";
   extraPackages = with pkgs; [
     steam
     obs-studio
