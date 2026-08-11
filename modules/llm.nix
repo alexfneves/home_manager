@@ -25,6 +25,17 @@
   # systemd.user.services.ollama.Install.WantedBy = [ "basic.target" ];
   systemd.user.services.ollama = lib.mkIf hostConfig.enableLlm {
     Install.WantedBy = [ "graphical-session.target" ];
+    Service.After = [ "graphical-session.target" ];
+    Service.Restart = "always";
+    Service.RestartSec = "3";
+    Service.ExecStartPre = [
+      (pkgs.writeShellScript "ollama-wait-kfd" ''
+        for i in 1 2 3 4 5; do
+          [ -e /dev/kfd ] && exit 0 || sleep 1
+        done
+        exit 0
+      '')
+    ];
     Service.Environment = [
       "OLLAMA_NUM_PARALLEL=4"
       "OLLAMA_MAX_LOADED_MODELS=4" # Allows up to 4 models in memory at once
