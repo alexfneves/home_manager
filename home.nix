@@ -60,6 +60,8 @@ in
     inotify-tools
     xclip
     nix-tree
+    w3m
+    asciidoctor
   ];
 
   # This value determines the Home Manager release that your
