@@ -12,7 +12,7 @@
     # "0.0.0"), which the ollama registry rejects when pulling models. Bump to
     # a newer tag with: nix flake lock --update-input ollama-git
     ollama-git = {
-      url = "github:ollama/ollama/v0.32.9";
+      url = "github:ollama/ollama/v0.32.13";
       flake = false;
     };
     home-manager = {
@@ -42,9 +42,9 @@
       };
 
       # ---- ollama-rocm built from the latest ollama GitHub release ----
-      # The whole derivation lives in ./ollama-rocm-git.nix so flake.nix stays
+      # The whole derivation lives in ./ollama/ollama-rocm-git.nix so flake.nix stays
       # clean; the `ollama-git` input above is the source it builds from.
-      ollamaRocmGit = import ./ollama-rocm-git.nix {
+      ollamaRocmGit = import ./ollama/ollama-rocm-git.nix {
         inherit pkgs unstablePkgs;
         lib = pkgs.lib;
         ollamaGit = inputs.ollama-git;
@@ -92,6 +92,12 @@
       packages.${system} = {
         ollama-rocm = unstablePkgs.ollama-rocm;
         ollama-rocm-git = ollamaRocmGit;
+      };
+      apps.${system} = {
+        update-ollama = {
+          type = "app";
+          program = "${./update-ollama-nix}";
+        };
       };
       homeConfigurations = {
         "${hosts.gmktec.username}@${hosts.gmktec.hostname}" = mkHome hosts.gmktec;
