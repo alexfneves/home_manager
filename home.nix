@@ -40,4 +40,10 @@
   };
 
   targets.genericLinux.enable = !hostConfig.isNixOS;
+
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";  # <-- This replaces 'frequency'
+    options = "--delete-older-than 14d";
+  };
 }
