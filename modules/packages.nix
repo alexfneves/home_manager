@@ -5,7 +5,6 @@
     baobab
     devenv
     ffmpeg # pi-listen
-    nodejs # pi
     cachix
     sshs
     direnv
@@ -20,7 +19,7 @@
     fzf
     fd
     htop
-    nvtopPackages.full
+    unstablePkgs.nvtopPackages.full
     gitFull
     starship
     nerd-fonts.jetbrains-mono
@@ -52,8 +51,11 @@
     podman
     distrobox
     spotatui
+    spotify
     unstablePkgs.herdr
   ]
+  # Conditional nodejs package
+  ++ (if (hostConfig.enableNodejs or false) then with pkgs; [ nodejs ] else [])
   # Machine-specific packages (ROCm/LLM stack, etc.)
   ++ (if hostConfig.enableLlm then with pkgs; [
     unstablePkgs.llama-cpp-rocm

@@ -6,4 +6,5 @@
   isNixOS = false;
   useNixGL = true;
   enableLlm = false;
+  enableNodejs = false;
 }

@@ -58,10 +58,11 @@
       #   isNixOS                 -> genericLinux target (Ubuntu etc.)
       #   useNixGL                -> wrap GUI binaries through nixGL (old GPUs/Ubuntu)
       #   enableLlm               -> ROCm stack: ollama, llama-cpp, open-webui
+      #   enableNodejs            -> nodejs + npm global setup
       #   ollamaSource            -> which ollama-rocm to use: "nixpkgs" (default) or "git"
       #   extraPackages           -> extra plain nixpkgs packages for this host
       #   extraUnstablePkgs       -> extra unstable-channel packages for this host
-      mkHome = { username, hostname, email, isNixOS, useNixGL, enableLlm
+      mkHome = { username, hostname, email, isNixOS, useNixGL, enableLlm, enableNodejs ? false
                , ollamaSource ? "nixpkgs"
                , extraPackages ? [], extraUnstablePkgs ? [] }:
         home-manager.lib.homeManagerConfiguration {
@@ -77,7 +78,7 @@
           extraSpecialArgs = {
             inherit inputs unstablePkgs ollamaRocmGit;
             hostConfig = {
-              inherit username hostname email isNixOS useNixGL enableLlm ollamaSource
+              inherit username hostname email isNixOS useNixGL enableLlm enableNodejs ollamaSource
                        extraPackages extraUnstablePkgs;
             };
           };
