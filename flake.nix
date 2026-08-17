@@ -12,7 +12,7 @@
     # "0.0.0"), which the ollama registry rejects when pulling models. Bump to
     # a newer tag with: nix flake lock --update-input ollama-git
     ollama-git = {
-      url = "github:ollama/ollama/v0.32.13";
+      url = "github:ollama/ollama/v0.32.14";
       flake = false;
     };
     home-manager = {

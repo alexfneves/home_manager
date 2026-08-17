@@ -45,12 +45,12 @@ let
     owner = "ggml-org";
     repo = "llama.cpp";
     tag = llamaCppVersion;
-    hash = "sha256-HT0QuIFJz5cgH2qinxhtyLEL/RrUpziZuntj/EDQtzI="; # bump: see comment above
+    hash = "sha256-Sz0kW1q91YzdrKbZUqMbFJ0DLZrzARSGheUrtCKcoQo="; # bump: see comment above
   };
 in
 basePackage.overrideAttrs (o: {
   pname = "${o.pname}-git";
-  version = "0.32.13"; # keep in sync with the ollama-git input tag
+  version = "0.32.14"; # keep in sync with the ollama-git input tag
   src = ollamaGit;
   vendorHash = "sha256-HMwoaFBMbpoy8f0I+O+i7kIa9BslLu3FcVWeaIOkpvs="; # bump: see comment above
   # Bleeding-edge builds shouldn't be gated on ollama's network-touching
@@ -58,7 +58,7 @@ basePackage.overrideAttrs (o: {
   doCheck = false;
   doInstallCheck = false;
   postPatch = ''
-    substituteInPlace version/version.go --replace-fail 0.0.0 '0.32.13'
+    substituteInPlace version/version.go --replace-fail 0.0.0 '0.32.14'
     # cmd/launch/*_test.go are CLI launcher tests that need npm + network;
     # drop them (mirrors the upstream derivation).
     rm cmd/launch/*_test.go
