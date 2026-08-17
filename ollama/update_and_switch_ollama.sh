@@ -10,5 +10,5 @@ REPO_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$SCRIPT_DIR"
 python3 update_ollama.py "$VERSION"
 cd "$REPO_DIR"
-nix build .#ollama-rocm-git --no-link
+nix build .#ollama-git-rocm --no-link
 home-manager switch --flake '.#alexfneves@gmktec'
