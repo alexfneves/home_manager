@@ -6,6 +6,7 @@
   isNixOS = true;
   useNixGL = false;
   enableLlm = true;
+  enableNodejs = true;
   # Which ollama backend to use:
   #   "rocm"   -> AMD ROCm acceleration
   #   "vulkan" -> Vulkan acceleration
@@ -21,6 +22,5 @@
     proton-pass
     protonmail-desktop
     proton-vpn
-    nvtopPackages.full
   ];
 }

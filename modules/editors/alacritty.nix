@@ -30,7 +30,7 @@ in
       };
       font = {
         normal = {
-          family = "JetBrainsMonoNerdFontMono";
+          family = "JetBrainsMono Nerd Font Mono";
           style = "Regular";
         };
       };

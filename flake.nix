@@ -76,11 +76,12 @@
       #   isNixOS                 -> genericLinux target (Ubuntu etc.)
       #   useNixGL                -> wrap GUI binaries through nixGL (old GPUs/Ubuntu)
       #   enableLlm               -> ROCm stack: ollama, llama-cpp, open-webui
+      #   enableNodejs            -> nodejs + npm global setup
       #   ollamaSource            -> which ollama to use: "nixpkgs" (default) or "git"
       #   ollamaBackend           -> "rocm" or "vulkan"
       #   extraPackages           -> extra plain nixpkgs packages for this host
       #   extraUnstablePkgs       -> extra unstable-channel packages for this host
-      mkHome = { username, hostname, email, isNixOS, useNixGL, enableLlm
+      mkHome = { username, hostname, email, isNixOS, useNixGL, enableLlm, enableNodejs ? false
                , ollamaSource ? "nixpkgs"
                , ollamaBackend ? "rocm"
                , extraPackages ? [], extraUnstablePkgs ? [] }:
@@ -97,7 +98,7 @@
           extraSpecialArgs = {
             inherit inputs unstablePkgs ollamaGit ollamaVulkan;
             hostConfig = {
-              inherit username hostname email isNixOS useNixGL enableLlm ollamaSource ollamaBackend
+              inherit username hostname email isNixOS useNixGL enableLlm enableNodejs ollamaSource ollamaBackend
                        extraPackages extraUnstablePkgs;
             };
           };
