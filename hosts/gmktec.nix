@@ -7,7 +7,11 @@
   useNixGL = false;
   enableLlm = true;
   enableNodejs = true;
-  # Which ollama-rocm to run:
+  # Which ollama backend to use:
+  #   "rocm"   -> AMD ROCm acceleration
+  #   "vulkan" -> Vulkan acceleration
+  ollamaBackend = "vulkan";
+  # Which ollama to run:
   #   "nixpkgs" -> nixpkgs-unstable build (stable, tested)
   #   "git"     -> latest from GitHub (bleeding edge, may crash — easy to flip back)
   ollamaSource = "git";
