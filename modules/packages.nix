@@ -42,7 +42,6 @@
     protonmail-desktop
     protonvpn-gui
     uv
-    python3
     steam
     obs-studio
     vlc

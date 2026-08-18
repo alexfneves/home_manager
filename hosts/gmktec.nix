@@ -18,5 +18,6 @@
     proton-pass
     protonmail-desktop
     proton-vpn
+    python3
   ];
 }
