@@ -15,6 +15,7 @@
     ./modules/editors/alacritty.nix
     ./modules/git.nix
     ./modules/llm.nix
+    ./modules/llama-server.nix
     ./modules/session.nix
     ./modules/activation.nix
   ];

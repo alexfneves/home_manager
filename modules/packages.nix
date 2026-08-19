@@ -58,7 +58,7 @@
   ++ (if (hostConfig.enableNodejs or false) then with pkgs; [ nodejs ] else [])
   # Machine-specific packages (ROCm/LLM stack, etc.)
   ++ (if hostConfig.enableLlm then with pkgs; [
-    unstablePkgs.llama-cpp-rocm
+    unstablePkgs.llama-cpp-vulkan
     rocmPackages.rocminfo
     rocmPackages.rocm-smi
     open-webui
