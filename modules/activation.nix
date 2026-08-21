@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, hostConfig, ... }:
 {
   # Keep herdr's config.toml in this git repo, but expose it to herdr at
   # ~/.config/herdr/config.toml via a real symlink. We deliberately DON'T use
@@ -24,4 +24,12 @@
     mkdir -p "$HOME/.config/spotatui"
     ln -sfn "$HOME/.config/home-manager/spotatui/config.yml" "$HOME/.config/spotatui/config.yml"
   '';
+
+  # Same approach for llama-server's model presets: keep models.ini in this git
+  # repo but expose it at ~/.config/llama-server/models.ini via a real symlink so
+  # model paths stay editable without a rebuild. LLM host only.
+  home.activation.linkLlamaServerConfig = lib.mkIf hostConfig.enableLlm (lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    mkdir -p "$HOME/.config/llama-server"
+    ln -sfn "$HOME/.config/home-manager/llama-server/models.ini" "$HOME/.config/llama-server/models.ini"
+  '');
 }
