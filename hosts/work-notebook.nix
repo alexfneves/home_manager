@@ -7,4 +7,5 @@
   useNixGL = true;
   enableLlm = false;
   enableNodejs = false;
+  enableCleanNixEnv = true;
 }

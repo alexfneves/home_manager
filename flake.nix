@@ -84,7 +84,8 @@
       mkHome = { username, hostname, email, isNixOS, useNixGL, enableLlm, enableNodejs ? false
                , ollamaSource ? "nixpkgs"
                , ollamaBackend ? "rocm"
-               , extraPackages ? [], extraUnstablePkgs ? [] }:
+               , extraPackages ? [], extraUnstablePkgs ? []
+               , enableCleanNixEnv ? false }:
         home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
 
@@ -99,7 +100,7 @@
             inherit inputs unstablePkgs ollamaGit ollamaVulkan;
             hostConfig = {
               inherit username hostname email isNixOS useNixGL enableLlm enableNodejs ollamaSource ollamaBackend
-                       extraPackages extraUnstablePkgs;
+                       extraPackages extraUnstablePkgs enableCleanNixEnv;
             };
           };
         };

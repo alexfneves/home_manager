@@ -18,6 +18,7 @@
     ./modules/llama-server.nix
     ./modules/session.nix
     ./modules/activation.nix
+    ./modules/clean-nix-for-ubuntu.nix
   ];
 
   # ---- Global config (applies to every machine) ----

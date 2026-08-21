@@ -7,6 +7,7 @@
   useNixGL = false;
   enableLlm = true;
   enableNodejs = true;
+  enableCleanNixEnv = false;
   # Which ollama backend to use:
   #   "rocm"   -> AMD ROCm acceleration
   #   "vulkan" -> Vulkan acceleration
