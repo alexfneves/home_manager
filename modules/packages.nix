@@ -2,6 +2,7 @@
 {
   # All packages, including machine-specific additions.
   home.packages = with pkgs; [
+    asciidoctor-with-extensions
     baobab
     devenv
     ffmpeg # pi-listen
