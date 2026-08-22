@@ -15,13 +15,17 @@
       url = "github:ollama/ollama/v0.32.14";
       flake = false;
     };
+    # llama.cpp fork with ROCm FPX support (has its own flake.nix exposing
+    # packages.x86_64-linux.{default,vulkan,rocm,...}). Bump with:
+    #   nix flake lock --update-input llama-fpx
+    llama-fpx.url = "github:charlie12345/ROCmFPX";
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { nixpkgs, unstable, home-manager, nixgl, self, ... } @ inputs:
+  outputs = { nixpkgs, unstable, home-manager, nixgl, llama-fpx, self, ... } @ inputs:
     let
       system = "x86_64-linux";
 
@@ -68,6 +72,28 @@
           }
         );
 
+      # ---- llama.cpp variants ----
+      # Two independent knobs per host, mirroring the ollama options:
+      #   llamaBackend -> "vulkan" or "rocm"
+      #   llamaSource  -> "nixpkgs" (nixpkgs-unstable build) or "git"
+      #                   (ROCmFPX fork, built from its own flake input)
+      # All four combinations are valid: both nixpkgs-unstable and the fork
+      # expose a vulkan and a rocm build of llama.cpp.
+      llamaCpp = { backend, source }:
+        let
+          # The ROCmFPX fork's cmake tries to download WebUI assets from
+          # Hugging Face during the build, which fails inside the nix sandbox.
+          # Build it without the bundled web UI instead.
+          fpx = pkg: pkg.overrideAttrs (o: {
+            cmakeFlags = (o.cmakeFlags or []) ++ [ "-DLLAMA_BUILD_WEBUI=OFF" ];
+          });
+        in
+        if source == "git"
+        then fpx llama-fpx.packages.${system}.${backend}
+        else if backend == "rocm"
+        then unstablePkgs.llama-cpp-rocm
+        else unstablePkgs.llama-cpp-vulkan;
+
     # Build a home-manager configuration for a single machine.
       #
       # hostConfig (passed to home.nix) carries everything that differs
@@ -79,13 +105,22 @@
       #   enableNodejs            -> nodejs + npm global setup
       #   ollamaSource            -> which ollama to use: "nixpkgs" (default) or "git"
       #   ollamaBackend           -> "rocm" or "vulkan"
+      #   llamaBackend            -> which llama.cpp GPU backend: "vulkan" (default) or "rocm"
+      #   llamaSource             -> where llama.cpp comes from: "nixpkgs" (default) or "git"
+      #                              ("git" = ROCmFPX fork built from its own flake)
       #   extraPackages           -> extra plain nixpkgs packages for this host
       #   extraUnstablePkgs       -> extra unstable-channel packages for this host
       mkHome = { username, hostname, email, isNixOS, useNixGL, enableLlm, enableNodejs ? false
                , ollamaSource ? "nixpkgs"
                , ollamaBackend ? "rocm"
+               , llamaSource ? "nixpkgs"
+               , llamaBackend ? "vulkan"
                , extraPackages ? [], extraUnstablePkgs ? []
                , enableCleanNixEnv ? false }:
+        let
+          # map host option names to llamaCpp's argument names
+          llamaPackage = llamaCpp { backend = llamaBackend; source = llamaSource; };
+        in
         home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
 
@@ -97,9 +132,9 @@
             }
           ];
           extraSpecialArgs = {
-            inherit inputs unstablePkgs ollamaGit ollamaVulkan;
+            inherit inputs unstablePkgs ollamaGit ollamaVulkan llamaPackage;
             hostConfig = {
-              inherit username hostname email isNixOS useNixGL enableLlm enableNodejs ollamaSource ollamaBackend
+              inherit username hostname email isNixOS useNixGL enableLlm enableNodejs ollamaSource ollamaBackend llamaSource llamaBackend
                        extraPackages extraUnstablePkgs enableCleanNixEnv;
             };
           };
@@ -116,6 +151,10 @@
         ollama-vulkan = ollamaVulkan;
         ollama-git-rocm = ollamaGit "rocm";
         ollama-git-vulkan = ollamaGit "vulkan";
+        llama-nixpkgs-vulkan = llamaCpp { backend = "vulkan"; source = "nixpkgs"; };
+        llama-nixpkgs-rocm   = llamaCpp { backend = "rocm";   source = "nixpkgs"; };
+        llama-git-vulkan     = llamaCpp { backend = "vulkan"; source = "git"; };
+        llama-git-rocm       = llamaCpp { backend = "rocm";   source = "git"; };
       };
       apps.${system} = {
         # `nix run .#update-ollama -- 0.33.0`

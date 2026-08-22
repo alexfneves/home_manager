@@ -1,4 +1,4 @@
-{ lib, unstablePkgs, hostConfig, ... }:
+{ pkgs, lib, unstablePkgs, llamaPackage, hostConfig, ... }:
 {
   # llama-server (llama.cpp router server) — LLM host only.
   #
@@ -22,8 +22,9 @@
       WantedBy = [ "graphical-session.target" ];
     };
     Service = {
-      # %h -> $HOME; the vulkan build matches the one in home.packages
-      ExecStart = "${unstablePkgs.llama-cpp-vulkan}/bin/llama-server --models-preset %h/.config/llama-server/models.ini --host 127.0.0.1 --port 8001";
+      # %h -> $HOME; the build matches the llama.cpp variant in home.packages
+      # (llamaSource: "nixpkgs"|"git" x llamaBackend: "vulkan"|"rocm")
+      ExecStart = "${llamaPackage}/bin/llama-server --models-preset %h/.config/llama-server/models.ini --host 127.0.0.1 --port 8001";
       Restart = "always";
       RestartSec = "3";
     };
