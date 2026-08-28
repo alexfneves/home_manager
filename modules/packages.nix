@@ -62,7 +62,7 @@
     llamaPackage
     rocmPackages.rocminfo
     rocmPackages.rocm-smi
-    open-webui
+    # open-webui
   ] else [])
   ++ hostConfig.extraPackages
   ++ hostConfig.extraUnstablePkgs;

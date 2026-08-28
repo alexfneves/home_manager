@@ -23,7 +23,7 @@
   #   llamaBackend-> "vulkan" or "rocm"
   llamaSource = "ggml-org";
   # ROCmFP4 models (ROCmFPX fork) only run on the ROCm build
-  llamaBackend = "rocm";
+  llamaBackend = "vulkan";
   extraPackages = with pkgs; [
     steam
     obs-studio
