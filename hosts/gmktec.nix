@@ -17,11 +17,13 @@
   #   "git"     -> latest from GitHub (bleeding edge, may crash — easy to flip back)
   ollamaSource = "git";
   # Which llama.cpp to run (llama-server + CLI tools). Two independent knobs:
-  #   llamaSource -> "nixpkgs" (nixpkgs-unstable build, stable) or
-  #                  "git"     (ROCmFPX fork from github:charlie12345/ROCmFPX)
+  #   llamaSource -> "nixpkgs"  (nixpkgs-unstable build, stable),
+  #                  "rocmfpx"  (ROCmFPX fork from github:charlie12345/ROCmFPX),
+  #                  "ggml-org" (mainline from github:ggml-org/llama.cpp)
   #   llamaBackend-> "vulkan" or "rocm"
-  llamaSource = "git";
-  llamaBackend = "vulkan";
+  llamaSource = "ggml-org";
+  # ROCmFP4 models (ROCmFPX fork) only run on the ROCm build
+  llamaBackend = "rocm";
   extraPackages = with pkgs; [
     steam
     obs-studio
