@@ -7,6 +7,7 @@
     ./modules/packages.nix
     ./modules/spotatui.nix
     ./modules/programs.nix
+    ./modules/programs/brave.nix
     ./modules/shell/zsh.nix
     ./modules/shell/starship.nix
     ./modules/shell/direnv.nix
