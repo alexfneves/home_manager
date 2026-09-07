@@ -1,4 +1,4 @@
-{ pkgs, lib, hostConfig, unstablePkgs, ... }:
+{ pkgs, lib, hostConfig, unstablePkgs, llamaPackage, ... }:
 {
   # All packages, including machine-specific additions.
   home.packages = with pkgs; [
@@ -58,10 +58,11 @@
   ++ (if (hostConfig.enableNodejs or false) then with pkgs; [ nodejs ] else [])
   # Machine-specific packages (ROCm/LLM stack, etc.)
   ++ (if hostConfig.enableLlm then with pkgs; [
-    unstablePkgs.llama-cpp-vulkan
+    # Which llama.cpp build — see llamaSource/llamaBackend in flake.nix / hosts/
+    llamaPackage
     rocmPackages.rocminfo
     rocmPackages.rocm-smi
-    open-webui
+    # open-webui
   ] else [])
   ++ hostConfig.extraPackages
   ++ hostConfig.extraUnstablePkgs;
