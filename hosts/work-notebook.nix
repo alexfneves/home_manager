@@ -8,4 +8,7 @@
   enableLlm = false;
   enableNodejs = false;
   enableCleanNixEnv = true;
+  extraPackages = with pkgs; [
+    drawio
+  ];
 }
