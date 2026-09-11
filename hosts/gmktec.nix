@@ -6,6 +6,10 @@
   isNixOS = true;
   useNixGL = false;
   enableLlm = true;
+  # halogen-flash-server (Qwen3.8-Flash-Next). Off by default; when true it
+  # replaces the ollama/open-webui/llama-server stack because it wants the
+  # whole 128 GB machine. Flip to false to get the old stack back.
+  enableHalogen = true;
   enableNodejs = true;
   enableCleanNixEnv = false;
   # Which ollama backend to use:

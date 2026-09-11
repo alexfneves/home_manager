@@ -17,6 +17,7 @@
     ./modules/git.nix
     ./modules/llm.nix
     ./modules/llama-server.nix
+    ./modules/halogen-flash.nix
     ./modules/session.nix
     ./modules/activation.nix
     ./modules/clean-nix-for-ubuntu.nix

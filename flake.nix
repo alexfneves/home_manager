@@ -159,6 +159,10 @@
       #   isNixOS                 -> genericLinux target (Ubuntu etc.)
       #   useNixGL                -> wrap GUI binaries through nixGL (old GPUs/Ubuntu)
       #   enableLlm               -> ROCm stack: ollama, llama-cpp, open-webui
+      #   enableHalogen           -> halogen-flash-server (Qwen3.8-Flash-Next
+      #                              container). Needs the whole machine, so it
+      #                              replaces the enableLlm ollama/llama-server
+      #                              stack (see modules/halogen-flash.nix)
       #   enableNodejs            -> nodejs + npm global setup
       #   ollamaSource            -> which ollama to use: "nixpkgs" (default) or "git"
       #   ollamaBackend           -> "rocm" or "vulkan"
@@ -175,7 +179,8 @@
                , llamaSource ? "nixpkgs"
                , llamaBackend ? "vulkan"
                , extraPackages ? [], extraUnstablePkgs ? []
-               , enableCleanNixEnv ? false }:
+               , enableCleanNixEnv ? false
+               , enableHalogen ? false }:
         let
           # map host option names to llamaCpp's argument names
           llamaPackage = llamaCpp { backend = llamaBackend; source = llamaSource; };
@@ -194,7 +199,7 @@
             inherit inputs unstablePkgs ollamaGit ollamaVulkan llamaPackage;
             hostConfig = {
               inherit username hostname email isNixOS useNixGL enableLlm enableNodejs ollamaSource ollamaBackend llamaSource llamaBackend
-                       extraPackages extraUnstablePkgs enableCleanNixEnv;
+                       extraPackages extraUnstablePkgs enableCleanNixEnv enableHalogen;
             };
           };
         };

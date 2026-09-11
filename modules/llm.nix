@@ -25,10 +25,13 @@ let
       OLLAMA_VULKAN = "1";
     } else {};
   needKfdWait = isRocm;
+  # halogen-flash-server holds the whole machine, so when it is enabled the
+  # ollama/open-webui stack is turned off (see modules/halogen-flash.nix).
+  llmEnabled = hostConfig.enableLlm && !(hostConfig.enableHalogen or false);
 in
 {
   # ---- LLM stack (home machine only: hostConfig.enableLlm) ----
-  services.ollama = lib.mkIf hostConfig.enableLlm {
+  services.ollama = lib.mkIf llmEnabled {
     enable = true;
     # home-manager's option only accepts null/false/"rocm"/"cuda" — it exists
     # to override the package's acceleration. We already pass a backend-correct
@@ -42,7 +45,7 @@ in
     environmentVariables = ollamaEnv;
   };
   # systemd.user.services.ollama.Install.WantedBy = [ "basic.target" ];
-  systemd.user.services.ollama = lib.mkIf hostConfig.enableLlm {
+  systemd.user.services.ollama = lib.mkIf llmEnabled {
     Install.WantedBy = [ "graphical-session.target" ];
     Service.After = [ "graphical-session.target" ];
     Service.Restart = "always";
@@ -67,7 +70,7 @@ in
       # default. ROCm on this chip needs no such override, so gate it on vulkan.
       ++ lib.optionals isVulkan [ "OLLAMA_IGPU_ENABLE=1" ];
   };
-  systemd.user.services.open-webui = lib.mkIf hostConfig.enableLlm {
+  systemd.user.services.open-webui = lib.mkIf llmEnabled {
     Unit = {
       Description = "Open WebUI";
       # After = [ "ollama.service" ];

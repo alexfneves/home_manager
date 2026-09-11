@@ -1,4 +1,9 @@
 { pkgs, lib, unstablePkgs, llamaPackage, hostConfig, ... }:
+let
+  # halogen-flash-server holds the whole machine, so when it is enabled the
+  # llama-server stack is turned off (see modules/halogen-flash.nix).
+  llmEnabled = hostConfig.enableLlm && !(hostConfig.enableHalogen or false);
+in
 {
   # llama-server (llama.cpp router server) — LLM host only.
   #
@@ -13,7 +18,7 @@
   # Leftover options from the serve.bash experiments (currently disabled there
   # too, so deliberately not enabled here):
   #   --models-dir ~/models --models-max 2 --sleep-idle-seconds 300
-  systemd.user.services.llama-server = lib.mkIf hostConfig.enableLlm {
+  systemd.user.services.llama-server = lib.mkIf llmEnabled {
     Unit = {
       Description = "llama.cpp router server (models.ini presets)";
       After = [ "graphical-session.target" ];

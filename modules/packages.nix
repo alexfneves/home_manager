@@ -62,6 +62,7 @@
     llamaPackage
     rocmPackages.rocminfo
     rocmPackages.rocm-smi
+    unstablePkgs.python314Packages.huggingface-hub
     # open-webui
   ] else [])
   ++ hostConfig.extraPackages
