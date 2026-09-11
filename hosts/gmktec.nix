@@ -19,9 +19,14 @@
   # Which llama.cpp to run (llama-server + CLI tools). Two independent knobs:
   #   llamaSource -> "nixpkgs"  (nixpkgs-unstable build, stable),
   #                  "rocmfpx"  (ROCmFPX fork from github:charlie12345/ROCmFPX),
-  #                  "ggml-org" (mainline from github:ggml-org/llama.cpp)
+  #                  "ggml-org" (mainline from github:ggml-org/llama.cpp),
+  #                  "k2horizon"(MBZUAI-IFM model/K2Horizon fork — k2_horizon MoVA GGUFs),
+  #                  "dflash2"  (mainline branch xsn/dflash2 — DFlash2 draft-dflash)
+  # NOTE: llamaSource is a single per-host value: whichever is set here is what
+  # serves ALL presets. Switching to "dflash2" means [k2-horizon-mova-q8_0] will
+  # not load until this is flipped back to "k2horizon".
   #   llamaBackend-> "vulkan" or "rocm"
-  llamaSource = "ggml-org";
+  llamaSource = "dflash2";
   # ROCmFP4 models (ROCmFPX fork) only run on the ROCm build
   llamaBackend = "vulkan";
   extraPackages = with pkgs; [

@@ -23,7 +23,7 @@
     };
     Service = {
       # %h -> $HOME; the build matches the llama.cpp variant in home.packages
-      # (llamaSource: "nixpkgs"|"rocmfpx"|"ggml-org" x llamaBackend: "vulkan"|"rocm")
+      # (llamaSource: "nixpkgs"|"rocmfpx"|"ggml-org"|"k2horizon"|"dflash2" x llamaBackend: "vulkan"|"rocm")
       ExecStart = "${llamaPackage}/bin/llama-server --models-preset %h/.config/llama-server/models.ini --host 127.0.0.1 --port 8001";
       # Strix Halo is a UMA APU: let HIP use the unified memory pool.
       # HSA_OVERRIDE_GFX_VERSION is required per the ROCmFP4 model cards.

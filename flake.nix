@@ -23,13 +23,23 @@
     # exposes packages.x86_64-linux.{default,vulkan,rocm,...}). Bump with:
     #   nix flake lock --update-input llama-ggml
     llama-ggml.url = "github:ggml-org/llama.cpp";
+    # MBZUAI-IFM llama.cpp fork with native k2_horizon (K2-Horizon MoVA)
+    # support (model/K2Horizon branch). Same flake interface as mainline, so
+    # it plugs into llamaCpp below unchanged. Bump with:
+    #   nix flake lock --update-input llama-k2horizon
+    llama-k2horizon.url = "github:MBZUAI-IFM/llama.cpp/model/K2Horizon";
+    # Mainline llama.cpp branch adding DFlash2 speculative decoding
+    # (PR #27342, branch xsn/dflash2). Same flake interface as mainline, so it
+    # plugs into llamaCpp below unchanged. Bump with:
+    #   nix flake lock --update-input llama-dflash2
+    llama-dflash2.url = "github:ggml-org/llama.cpp/xsn/dflash2";
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { nixpkgs, unstable, home-manager, nixgl, llama-fpx, llama-ggml, self, ... } @ inputs:
+  outputs = { nixpkgs, unstable, home-manager, nixgl, llama-fpx, llama-ggml, llama-k2horizon, llama-dflash2, self, ... } @ inputs:
     let
       system = "x86_64-linux";
 
@@ -79,11 +89,15 @@
       # ---- llama.cpp variants ----
       # Two independent knobs per host, mirroring the ollama options:
       #   llamaBackend -> "vulkan" or "rocm"
-      #   llamaSource  -> "nixpkgs"  (nixpkgs-unstable build, stable)
-      #                   "rocmfpx"  (ROCmFPX fork github:charlie12345/ROCmFPX)
-      #                   "ggml-org" (mainline github:ggml-org/llama.cpp)
-      # All six combinations are valid: nixpkgs-unstable, the fork and
-      # mainline all expose a vulkan and a rocm build of llama.cpp.
+      #   llamaSource  -> "nixpkgs"    (nixpkgs-unstable build, stable)
+      #                   "rocmfpx"    (ROCmFPX fork github:charlie12345/ROCmFPX)
+      #                   "ggml-org"   (mainline github:ggml-org/llama.cpp)
+      #                   "k2horizon"  (MBZUAI-IFM fork, model/K2Horizon branch —
+      #                                 required for k2_horizon MoVA GGUFs)
+      #                   "dflash2"    (mainline branch xsn/dflash2 — required for
+      #                                 draft-dflash / Qwen3.8-27B-DFlash2)
+      # All combinations are valid: nixpkgs-unstable, the forks and mainline
+      # all expose a vulkan and a rocm build of llama.cpp.
       llamaCpp = { backend, source }:
         let
           # The ROCmFPX fork's cmake tries to download WebUI assets from
@@ -113,8 +127,9 @@
               sed -i 's/\(FATTN_VEC_CASES_\)ALL_D(\(GGML_TYPE_Q[0-9]_0_ROCMFP[A-Z0-9_]*\), *\(GGML_TYPE_Q[0-9]_0_ROCMFP[A-Z0-9_]*\))/\1NO256(\2, \3)/' ggml/src/ggml-cuda/fattn.cu
             '';
           });
-          # Mainline llama.cpp (github:ggml-org/llama.cpp) builds its webui
-          # offline from source, so it only needs the Strix Halo ROCm tweaks:
+          # Mainline llama.cpp (github:ggml-org/llama.cpp) and the MBZUAI-IFM
+          # k2horizon fork (same flake/package layout) build their webui
+          # offline from source, so they only need the Strix Halo ROCm tweaks:
           # target only gfx1151 and force MMQ kernels (as recommended for UMA
           # APUs); no postPatch / fattn surgery needed.
           ggml = pkg: pkg.overrideAttrs (o: {
@@ -128,6 +143,10 @@
         then fpx llama-fpx.packages.${system}.${backend}
         else if source == "ggml-org"
         then ggml llama-ggml.packages.${system}.${backend}
+        else if source == "k2horizon"
+        then ggml llama-k2horizon.packages.${system}.${backend}
+        else if source == "dflash2"
+        then ggml llama-dflash2.packages.${system}.${backend}
         else if backend == "rocm"
         then unstablePkgs.llama-cpp-rocm
         else unstablePkgs.llama-cpp-vulkan;
@@ -145,7 +164,9 @@
       #   ollamaBackend           -> "rocm" or "vulkan"
       #   llamaBackend            -> which llama.cpp GPU backend: "vulkan" (default) or "rocm"
       #   llamaSource             -> where llama.cpp comes from: "nixpkgs" (default),
-      #                              "rocmfpx" (ROCmFPX fork) or "ggml-org" (mainline)
+      #                              "rocmfpx" (ROCmFPX fork), "ggml-org" (mainline),
+      #                              "k2horizon" (MBZUAI-IFM model/K2Horizon fork)
+      #                              or "dflash2" (mainline branch xsn/dflash2)
       #   extraPackages           -> extra plain nixpkgs packages for this host
       #   extraUnstablePkgs       -> extra unstable-channel packages for this host
       mkHome = { username, hostname, email, isNixOS, useNixGL, enableLlm, enableNodejs ? false
@@ -195,6 +216,10 @@
         llama-rocmfpx-rocm   = llamaCpp { backend = "rocm";   source = "rocmfpx"; };
         llama-ggml-vulkan    = llamaCpp { backend = "vulkan"; source = "ggml-org"; };
         llama-ggml-rocm      = llamaCpp { backend = "rocm";   source = "ggml-org"; };
+        llama-k2horizon-vulkan = llamaCpp { backend = "vulkan"; source = "k2horizon"; };
+        llama-k2horizon-rocm   = llamaCpp { backend = "rocm";   source = "k2horizon"; };
+        llama-dflash2-vulkan = llamaCpp { backend = "vulkan"; source = "dflash2"; };
+        llama-dflash2-rocm   = llamaCpp { backend = "rocm";   source = "dflash2"; };
       };
       apps.${system} = {
         # `nix run .#update-ollama -- 0.33.0`
