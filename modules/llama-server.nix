@@ -1,8 +1,9 @@
 { pkgs, lib, unstablePkgs, llamaPackage, hostConfig, ... }:
 let
-  # halogen-flash-server holds the whole machine, so when it is enabled the
-  # llama-server stack is turned off (see modules/halogen-flash.nix).
-  llmEnabled = hostConfig.enableLlm && !(hostConfig.enableHalogen or false);
+  # Starts with the rest of the LLM stack — no longer gated on halogen. Running
+  # llama-server alongside halogen is a memory-budget decision the operator
+  # makes per host, not something this module enforces (see halogen-flash.nix).
+  llmEnabled = hostConfig.enableLlm;
 in
 {
   # llama-server (llama.cpp router server) — LLM host only.

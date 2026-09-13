@@ -25,9 +25,12 @@ let
       OLLAMA_VULKAN = "1";
     } else {};
   needKfdWait = isRocm;
-  # halogen-flash-server holds the whole machine, so when it is enabled the
-  # ollama/open-webui stack is turned off (see modules/halogen-flash.nix).
-  llmEnabled = hostConfig.enableLlm && !(hostConfig.enableHalogen or false);
+  # Every LLM backend starts together — ollama and open-webui here, llama-server
+  # and halogen in their own modules — all keyed off the single `enableLlm`
+  # flag. Whether they coexist on one box is the operator's call: halogen pins
+  # ~68 GiB of weights and reserves its KV pool up front, so running them all
+  # at once is a memory budget you manage by hand.
+  llmEnabled = hostConfig.enableLlm;
 in
 {
   # ---- LLM stack (home machine only: hostConfig.enableLlm) ----

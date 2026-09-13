@@ -158,11 +158,11 @@
       #   username / email        -> user identity
       #   isNixOS                 -> genericLinux target (Ubuntu etc.)
       #   useNixGL                -> wrap GUI binaries through nixGL (old GPUs/Ubuntu)
-      #   enableLlm               -> ROCm stack: ollama, llama-cpp, open-webui
-      #   enableHalogen           -> halogen-flash-server (Qwen3.8-Flash-Next
-      #                              container). Needs the whole machine, so it
-      #                              replaces the enableLlm ollama/llama-server
-      #                              stack (see modules/halogen-flash.nix)
+      #   enableLlm               -> the whole local LLM stack: ollama,
+      #                              llama-server, open-webui and the
+      #                              halogen-flash-server container. They all
+      #                              spawn together; how you divide the box's
+      #                              RAM between them is the operator's call.
       #   enableNodejs            -> nodejs + npm global setup
       #   ollamaSource            -> which ollama to use: "nixpkgs" (default) or "git"
       #   ollamaBackend           -> "rocm" or "vulkan"
@@ -179,8 +179,7 @@
                , llamaSource ? "nixpkgs"
                , llamaBackend ? "vulkan"
                , extraPackages ? [], extraUnstablePkgs ? []
-               , enableCleanNixEnv ? false
-               , enableHalogen ? false }:
+               , enableCleanNixEnv ? false }:
         let
           # map host option names to llamaCpp's argument names
           llamaPackage = llamaCpp { backend = llamaBackend; source = llamaSource; };
@@ -199,7 +198,7 @@
             inherit inputs unstablePkgs ollamaGit ollamaVulkan llamaPackage;
             hostConfig = {
               inherit username hostname email isNixOS useNixGL enableLlm enableNodejs ollamaSource ollamaBackend llamaSource llamaBackend
-                       extraPackages extraUnstablePkgs enableCleanNixEnv enableHalogen;
+                       extraPackages extraUnstablePkgs enableCleanNixEnv;
             };
           };
         };

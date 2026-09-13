@@ -10,12 +10,13 @@ let
   #   image          : ghcr.io/peonist-ai/halogen-flash-server:0.5.8
   #
   # This server wants most of a 128 GB machine once it is loaded: the weights
-  # stay resident and the KV pool is reserved up front. That is why flipping
-  # `enableHalogen` on (hosts/gmktec.nix) turns the ollama / open-webui /
-  # llama-server stack off instead (see modules/llm.nix and llama-server.nix).
-  # Set `enableHalogen = false` to get the old stack back.
-  halogenEnabled = hostConfig.enableHalogen or false;
-  enabled = hostConfig.enableLlm && halogenEnabled;
+  # stay resident and the KV pool is reserved up front.
+  #
+  # It is gated by `enableLlm` exactly like every other backend, so all of them
+  # spawn together. Which ones you actually keep loaded at the same time is your
+  # call, not something this config enforces — watch the pinned weights plus
+  # whatever ollama and llama-server load alongside it.
+  llmEnabled = hostConfig.enableLlm;
 
   weightsRepo = "peonist-ai/halogen-qwen3.8-flash-next";
   image = "ghcr.io/peonist-ai/halogen-flash-server:0.5.8";
@@ -92,7 +93,7 @@ in
   # Run the server. Rootless podman, one container ("all" mode): the engine
   # binds loopback inside the container and the OpenAI-compatible front-end is
   # published on :8731 (loopback-only on the host).
-  systemd.user.services.halogen-flash-server = lib.mkIf enabled {
+  systemd.user.services.halogen-flash-server = lib.mkIf llmEnabled {
     Unit = {
       Description = "halogen-flash server (Qwen3.8-Flash-Next, OpenAI API :8731)";
       After = [ "network-online.target" ];
