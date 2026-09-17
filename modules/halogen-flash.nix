@@ -103,8 +103,8 @@ in
       # of weights and re-reads them through the page cache, and a re-pin that
       # fights a fragmented host can burn tens of minutes at 100% of one core.
       # Three tries per fifteen minutes, then stop and leave it down.
-      StartLimitIntervalSec = 900;
-      StartLimitBurst = 3;
+      # StartLimitIntervalSec = 900;
+      # StartLimitBurst = 3;
     };
 
     Install.WantedBy = [ "default.target" ];
