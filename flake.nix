@@ -37,6 +37,19 @@
       url = "github:nix-community/home-manager/release-26.05";
       # inputs.nixpkgs.follows = "nixpkgs";
     };
+    # The home dashboard: an Odin backend serving a single-file frontend with
+    # CPU/GPU/RAM history plus the status and per-unit resource use of the local
+    # LLM user units (ollama, llama-server, halogen-flash-server). Own repo/flake;
+    # it exposes `homeManagerModules.default`, imported by modules/dashboard.nix.
+    # NOTE: the repo is private, so this must be fetched over SSH (anonymous
+    # HTTPS 404s). That means evaluating this config needs a working SSH key for
+    # github.com; making the repo public would let it use `github:...` instead.
+    # It follows `unstable` so we do not pull a second nixpkgs just for this
+    # package. Bump with: nix flake lock --update-input home-dashboard
+    home-dashboard = {
+      url = "git+ssh://git@github.com/alexfneves/home_dashboard.git";
+      inputs.nixpkgs.follows = "unstable";
+    };
   };
 
   outputs = { nixpkgs, unstable, home-manager, nixgl, llama-fpx, llama-ggml, llama-k2horizon, llama-dflash2, self, ... } @ inputs:

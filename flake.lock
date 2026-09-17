@@ -90,6 +90,26 @@
         "type": "github"
       }
     },
+    "home-dashboard": {
+      "inputs": {
+        "nixpkgs": [
+          "unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1789684163,
+        "narHash": "sha256-46i2xaxqGSbHXzCANOFXZPEmhd8xIZQ2OsAr1uIZnxs=",
+        "ref": "refs/heads/main",
+        "rev": "24ac176a3343e14fd50b88200769abb68e53b579",
+        "revCount": 15,
+        "type": "git",
+        "url": "ssh://git@github.com/alexfneves/home_dashboard.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/alexfneves/home_dashboard.git"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": "nixpkgs"
@@ -396,6 +416,7 @@
     },
     "root": {
       "inputs": {
+        "home-dashboard": "home-dashboard",
         "home-manager": "home-manager",
         "llama-dflash2": "llama-dflash2",
         "llama-fpx": "llama-fpx",
