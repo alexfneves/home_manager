@@ -97,11 +97,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1789684163,
-        "narHash": "sha256-46i2xaxqGSbHXzCANOFXZPEmhd8xIZQ2OsAr1uIZnxs=",
+        "lastModified": 1789685859,
+        "narHash": "sha256-z0FCPrUKfk8Z2j46+iXbqDb7a1dMqflIzmcTmh/a/VA=",
         "ref": "refs/heads/main",
-        "rev": "24ac176a3343e14fd50b88200769abb68e53b579",
-        "revCount": 15,
+        "rev": "3ce370103442eaf82b8f714d6c03f27a8b9dde04",
+        "revCount": 16,
         "type": "git",
         "url": "ssh://git@github.com/alexfneves/home_dashboard.git"
       },
