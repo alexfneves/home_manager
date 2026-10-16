@@ -423,6 +423,10 @@
         "llama-ggml": "llama-ggml",
         "llama-k2horizon": "llama-k2horizon",
         "nixgl": "nixgl",
+        "nixgl-nixpkgs": [
+          "nixgl",
+          "nixpkgs"
+        ],
         "nixpkgs": "nixpkgs_7",
         "ollama-git": "ollama-git",
         "unstable": "unstable"

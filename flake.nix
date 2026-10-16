@@ -5,6 +5,10 @@
     # Specify the source of Home Manager and Nixpkgs.
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     nixgl.url = "github:guibou/nixGL";
+    # nixGL's own nixpkgs. Its NVIDIA driver wrapper (modules/programs/brave.nix)
+    # must build against it: nixos-26.05 dropped the `kernel` argument that nixGL
+    # passes to nvidia_x11. Follows nixGL's lock, so it moves with `nixgl`.
+    nixgl-nixpkgs.follows = "nixgl/nixpkgs";
     unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     # Latest RELEASE of ollama, so we can build the git variant straight from
     # GitHub instead of waiting for nixpkgs-unstable to catch up.
