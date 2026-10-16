@@ -54,6 +54,14 @@
       url = "git+ssh://git@github.com/alexfneves/home_dashboard.git";
       inputs.nixpkgs.follows = "unstable";
     };
+    # The nws workspace daemon: an Odin CLI plus its NixOS and Home Manager
+    # modules (modules/nws.nix). Public repo, so plain github: works without
+    # SSH. Follows our nixpkgs so the daemon is built with the same toolchain as
+    # the rest of the config. Bump with: nix flake lock --update-input nws
+    nws = {
+      url = "github:alexfneves/nws";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { nixpkgs, unstable, home-manager, nixgl, llama-fpx, llama-ggml, llama-k2horizon, llama-dflash2, self, ... } @ inputs:
@@ -188,6 +196,7 @@
       #                              "rocmfpx" (ROCmFPX fork), "ggml-org" (mainline),
       #                              "k2horizon" (MBZUAI-IFM model/K2Horizon fork)
       #                              or "dflash2" (mainline branch xsn/dflash2)
+      #   enableNws               -> run the nws workspace daemon (modules/nws.nix)
       #   extraPackages           -> extra plain nixpkgs packages for this host
       #   extraUnstablePkgs       -> extra unstable-channel packages for this host
       mkHome = { username, hostname, email, isNixOS, useNixGL, enableLlm, enableNodejs ? false
@@ -196,7 +205,7 @@
                , llamaSource ? "nixpkgs"
                , llamaBackend ? "vulkan"
                , extraPackages ? [], extraUnstablePkgs ? []
-               , enableCleanNixEnv ? false }:
+               , enableCleanNixEnv ? false, enableNws ? false }:
         let
           # map host option names to llamaCpp's argument names
           llamaPackage = llamaCpp { backend = llamaBackend; source = llamaSource; };
@@ -215,7 +224,7 @@
             inherit inputs unstablePkgs ollamaGit ollamaVulkan llamaPackage;
             hostConfig = {
               inherit username hostname email isNixOS useNixGL enableLlm enableNodejs ollamaSource ollamaBackend llamaSource llamaBackend
-                       extraPackages extraUnstablePkgs enableCleanNixEnv;
+                       extraPackages extraUnstablePkgs enableCleanNixEnv enableNws;
             };
           };
         };

@@ -19,6 +19,7 @@
     ./modules/llama-server.nix
     ./modules/halogen-flash.nix
     ./modules/dashboard.nix
+    ./modules/nws.nix
     ./modules/session.nix
     ./modules/activation.nix
     ./modules/clean-nix-for-ubuntu.nix
