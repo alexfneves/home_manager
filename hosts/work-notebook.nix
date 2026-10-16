@@ -10,5 +10,6 @@
   enableCleanNixEnv = true;
   extraPackages = with pkgs; [
     drawio
+    claude-code
   ];
 }
