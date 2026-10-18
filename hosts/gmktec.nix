@@ -37,5 +37,6 @@
     protonmail-desktop
     proton-vpn
     python3
+    discord
   ];
 }
