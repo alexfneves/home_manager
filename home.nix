@@ -14,6 +14,8 @@
     ./modules/shell/btop.nix
     ./modules/editors/helix.nix
     ./modules/editors/alacritty.nix
+    ./modules/editors/ghostty.nix
+    ./modules/herdr-session.nix
     ./modules/git.nix
     ./modules/llm.nix
     ./modules/llama-server.nix

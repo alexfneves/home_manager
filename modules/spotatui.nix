@@ -6,7 +6,7 @@ let
   spotatui = lib.getExe pkgs.spotatui;
 
   # Dedicated launcher: run spotatui inside Alacritty. The terminal.shell
-  # override (herdr-cycle) is bypassed by passing -e. WM_CLASS is overridden
+  # override (herdr-session) is bypassed by passing -e. WM_CLASS is overridden
   # per-instance (-o) so KDE's taskbar/launcher treat this window as Spotatui
   # (Spotify icon) instead of an Alacritty window.
   spotatuiLauncher = pkgs.writeShellScriptBin "spotatui-launcher" ''

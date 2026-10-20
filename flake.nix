@@ -62,6 +62,24 @@
       url = "github:alexfneves/nws";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # herdr-session: the replacement for this repo's herdr-cycle.sh. An Odin TUI
+    # that creates / attaches / deletes herdr sessions and hands the terminal
+    # over to one (see modules/herdr-session.nix). Public repo, so plain
+    # github: works without SSH.
+    # It ships NO Home Manager module and NO overlay — only
+    # packages.<system>.{default,clayLib,termbox2Lib} — so unlike nws and
+    # home-dashboard we consume it as a plain package, not via
+    # `imports = [ ... homeManagerModules.default ]`.
+    # Follows `unstable`, deliberately NOT `nixpkgs`: the build needs a newer
+    # Odin than nixos-26.05 ships. Against nixos-26.05 (odin-dev-2026-05) it
+    # fails with `src/app/config.odin(382:15): 'parse_bytes' is not declared by
+    # 'json'`; against nixpkgs-unstable (odin-dev-2026-10) it builds clean.
+    # Following `unstable` also collapses its own devenv nixpkgs onto ours.
+    # Bump with: nix flake lock --update-input herdr-session
+    herdr-session = {
+      url = "github:alexfneves/herdr_session";
+      inputs.nixpkgs.follows = "unstable";
+    };
   };
 
   outputs = { nixpkgs, unstable, home-manager, nixgl, llama-fpx, llama-ggml, llama-k2horizon, llama-dflash2, self, ... } @ inputs:
@@ -83,6 +101,97 @@
           allowUnfreePredicate = _: true;
         };
       };
+
+      # Shared `lib` for the nixGL helper below (unfree predicate + getName).
+      lib = pkgs.lib;
+
+      # ---- pinned NVIDIA nixGL wrapper (shared) ----
+      # Lives in the flake (not in a single module) so every GUI package that
+      # needs the pinned NVIDIA driver stack can use it: currently brave
+      # (modules/programs/brave.nix) and ghostty
+      # (modules/editors/ghostty.nix). Passed to modules through
+      # extraSpecialArgs as `nixGLNvidiaWrap` (Chromium-flavoured, what brave
+      # uses) and `nixGLNvidiaWrapWith` (same wrapper, explicit flag list).
+      # Moved out of brave.nix with its comments intact -- the reasoning below
+      # is load-bearing; only the Chromium flags were lifted into a parameter
+      # (see nixGLNvidiaWrapWith).
+      #
+      # The work laptop has an NVIDIA GPU, so nixGL must wrap the NVIDIA driver
+      # libraries, and those must match the kernel module the host runs
+      # (/proc/driver/nvidia/version). The version is pinned here so evaluation stays
+      # pure. The auto-detect `nixGLDefault` read /proc at eval time through
+      # `builtins.currentTime`, which needed `--impure`. When Ubuntu upgrades the
+      # driver, update nvidiaVersion and nvidiaSha256 (the SHA256 of NVIDIA's
+      # NVIDIA-Linux-x86_64-<version>.run; `nix-prefetch-url <url>` prints it).
+      nvidiaVersion = "550.163.01";
+      nvidiaSha256 = "0blsmdf9fyw8jjm6fq45bdrldvlj7hnziyz98l0ld5a5ngslk0gg";
+      # nixGL's nvidia_x11 must be built with nixGL's own nixpkgs (see the
+      # nixgl-nixpkgs input above). The NVIDIA driver is unfree, so that
+      # instance allows unfree for nvidia packages only.
+      nixglPkgs = import inputs.nixgl-nixpkgs {
+        inherit system;
+        config.allowUnfreePredicate = pkg: lib.hasPrefix "nvidia" (lib.getName pkg);
+      };
+      nixglLib = import "${inputs.nixgl}/default.nix" {
+        pkgs = nixglPkgs;
+        enable32bits = true;
+        enableIntelX86Extensions = true;
+      };
+      nixGLBin = nixglLib.nixGLCommon
+        (nixglLib.nvidiaPackages { version = nvidiaVersion; sha256 = nvidiaSha256; }).nixGLNvidia;
+
+      # Flags appended to every launch by `nixGLNvidiaWrap`. Chromium-family
+      # apps want them: ozone picks the platform itself, VA-API/Vulkan turn on
+      # hardware codecs, and the GPU sandbox has to go because it cannot see the
+      # driver nixGL injects from outside Nix.
+      nixGLChromiumFlags = [
+        "--ozone-platform-hint=auto"
+        "--enable-features=VaapiVideoDecoder,VaapiVideoEncoder,Vulkan"
+        "--disable-gpu-sandbox"
+      ];
+
+      # The generic form: wrap every bin/* of `pkg` through the pinned NVIDIA
+      # nixGL above, appending `extraArgs` to the command line.
+      #
+      # The flags are a parameter rather than baked in because appending them
+      # unconditionally breaks every non-launch subcommand. ghostty parses its
+      # CLI strictly -- `ghostty --ozone-platform-hint=auto +validate-config`
+      # exits 1 with no message at all -- and home-manager runs exactly that at
+      # activation time (xdg.configFile."ghostty/config".onChange ->
+      # `${lib.getExe cfg.package} +validate-config --config-file=...`, with no
+      # `|| true`, in a script running under set -e), so a flag-injecting
+      # wrapper makes `home-manager switch` on the work host abort. A flagless
+      # wrap is fine: `nixGL ghostty +validate-config --config-file=...`
+      # exits 0.
+      nixGLNvidiaWrapWith = extraArgs: pkg:
+        (pkgs.runCommand "${pkg.name}-nixgl-wrapper" { } ''
+          mkdir $out
+          ln -s ${pkg}/* $out
+          rm $out/bin
+          mkdir $out/bin
+          for bin in ${pkg}/bin/*; do
+            wrapped_bin=$out/bin/$(basename $bin)
+            cat > $wrapped_bin <<EOS
+#!/usr/bin/env bash
+# Run through the pinned NVIDIA nixGL wrapper (see nvidiaVersion above)
+exec ${nixGLBin}/bin/nixGL $bin ${lib.escapeShellArgs extraArgs} "\$@"
+EOS
+            chmod +x $wrapped_bin
+          done
+        '').overrideAttrs (_: {
+          # Carry the wrapped package's `meta` through the wrapper. This is not
+          # cosmetic: a bare runCommand has no `meta.mainProgram`, and
+          # `lib.getExe` throws at EVAL time on such a package. Home-manager's
+          # ghostty module runs `${lib.getExe cfg.package} +validate-config`,
+          # so a wrapper without meta would break the whole host evaluation.
+          # Copying meta over also keeps `meta.mainProgram` ("brave",
+          # "ghostty", ...) pointing at the real binary -- which is exactly the
+          # one this wrapper re-execs.
+          meta = pkg.meta or { };
+        });
+
+      # Chromium-flavoured default (brave): pinned nixGL + the Chromium flags.
+      nixGLNvidiaWrap = nixGLNvidiaWrapWith nixGLChromiumFlags;
 
       # ---- ollama built from the latest ollama GitHub release ----
       # The whole derivation lives in ./ollama/ollama-git.nix so flake.nix stays
@@ -176,6 +285,28 @@
         then unstablePkgs.llama-cpp-rocm
         else unstablePkgs.llama-cpp-vulkan;
 
+      # ---- herdr-session ----
+      # `herdr-session` resolves `herdr` — and `ssh`, for its remote hosts —
+      # out of the CALLER's PATH at runtime. A window opened from a desktop
+      # launcher, where ~/.nix-profile/bin is often not on PATH, therefore
+      # reports "herdr not installed here". Prepend both binaries in a wrapper
+      # so it works from a launcher as well as from an interactive shell.
+      # One binary, spelled out rather than looped over: it is the only thing
+      # the package installs, and a quoted heredoc keeps $PATH / $@ literal for
+      # the runtime shell instead of baking in this build's values.
+      herdrSessionRaw = inputs.herdr-session.packages.${system}.default;
+      herdrSessionPackage = pkgs.runCommand "${herdrSessionRaw.name}-path-wrapper" {} ''
+        mkdir -p $out/bin
+        cat > $out/bin/herdr-session <<'WRAPPER'
+        #!/bin/sh
+        # Added by this flake: herdr + ssh must be resolvable however we were
+        # launched (see herdrSessionPackage in flake.nix).
+        export PATH=${unstablePkgs.herdr}/bin:${pkgs.openssh}/bin:$PATH
+        exec ${herdrSessionRaw}/bin/herdr-session "$@"
+        WRAPPER
+        chmod +x $out/bin/herdr-session
+      '';
+
     # Build a home-manager configuration for a single machine.
       #
       # hostConfig (passed to home.nix) carries everything that differs
@@ -221,7 +352,7 @@
             }
           ];
           extraSpecialArgs = {
-            inherit inputs unstablePkgs ollamaGit ollamaVulkan llamaPackage;
+            inherit inputs unstablePkgs ollamaGit ollamaVulkan llamaPackage herdrSessionPackage nixGLNvidiaWrap nixGLNvidiaWrapWith;
             hostConfig = {
               inherit username hostname email isNixOS useNixGL enableLlm enableNodejs ollamaSource ollamaBackend llamaSource llamaBackend
                        extraPackages extraUnstablePkgs enableCleanNixEnv enableNws;

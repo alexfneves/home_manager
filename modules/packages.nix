@@ -38,6 +38,9 @@
     vscode
     inotify-tools
     xclip
+    # Wayland counterpart of xclip (wl-copy / wl-paste). xclip alone is X11-only,
+    # so under a Wayland session there was no CLI clipboard at all.
+    wl-clipboard
     nix-tree
     proton-pass
     protonmail-desktop

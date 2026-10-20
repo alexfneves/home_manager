@@ -1,4 +1,4 @@
-{ pkgs, lib, hostConfig, config, ... }:
+{ pkgs, lib, hostConfig, herdrSessionPackage, ... }:
 let
   nixGLWrap = pkg: pkgs.runCommand "${pkg.name}-nixgl-wrapper" {} ''
     mkdir $out
@@ -23,10 +23,12 @@ in
         startup_mode = "Maximized";
       };
       terminal.shell = {
-        # herdr-cycle: fresh session, or attach/delete menu (see
-        # herdr/herdr-cycle.sh, symlinked to ~/.local/bin by activation.nix).
-        # Absolute path so no PATH assumptions are needed here.
-        program = "${config.home.homeDirectory}/.local/bin/herdr-cycle";
+        # herdr-session: fresh session, or the create/attach/delete picker
+        # (github:alexfneves/herdr_session, installed by
+        # modules/herdr-session.nix). Replaces this repo's herdr-cycle.sh.
+        # Absolute path so no PATH assumptions are needed here; the package is
+        # wrapped so `herdr` itself is resolvable from inside it.
+        program = "${herdrSessionPackage}/bin/herdr-session";
       };
       font = {
         normal = {
