@@ -51,52 +51,189 @@ let
   #
   #   podman inspect halogen-flash-server --format '{{range .Config.Env}}{{println .}}{{end}}' | grep HALOGEN
   #
-  # CONTEXT IS NOT THE POOL — worth saying plainly, because conflating them
-  # cost a debugging session. The context a single conversation may reach is
-  # HALOGEN_CTX, which upstream sets to the model's full native 262,144 and
-  # this file does not override. So 262k of context is already available to
-  # any one conversation. The pool only decides how many such conversations
-  # can be resident at the same time, because each reserves
-  # `prompt + max_tokens` from it.
+  # THE TWO THINGS THAT HAVE TO FIT: the prompt and the reply.
   #
-  # THE POOL. Every in-flight conversation reserves `prompt + max_tokens`
-  # positions from ONE pool shared by all slots; admission waits on it. The
-  # pool takes RAM the page cache would otherwise spend on the model's n-gram
-  # lookup table, which is read through the file cache and never held, so a
-  # bigger pool means fewer cached rows and slower cold prompts. Per-stream
-  # decode speed follows a conversation's own length, not the pool size.
+  # HALOGEN_CTX is the context of ONE request — prompt AND generated tokens,
+  # together, inside the same window, always. The pool below is a different
+  # thing: it decides how many such requests can be resident at once,
+  # because each takes `prompt + max_tokens` positions out of it. Conflating
+  # them cost a debugging session, so: ctx = how big one request may be,
+  # pool = how many requests at once.
   #
-  # What 786432 buys, and why it fits. Upstream's own pool table for 0.18.9
-  # (docs/configuration.md), with this checkpoint on this box:
+  # WHY THE NATIVE 262,144 STOPPED BEING ENOUGH. pi is configured with
+  # contextWindow 262144 for this model (~/.pi/agent/models.json) — exactly
+  # the native figure — and it sizes both its ordinary requests and its
+  # compaction requests against its OWN chars/4 estimate of the prompt, for
+  # which the 0.18.9 measured reality on code/tool-heavy content is higher.
+  # So pi sends a request the server has no room to answer, and the clamp
+  # eats the reply. From the journal on this box:
   #
-  #   pool 262,144  -> 19.8 GiB  one full conversation, or four at 65k
-  #   pool 524,288  -> 27.0 GiB  two full, or four at 131k
-  #   pool 786,432  -> 34.2 GiB  three full conversations        <- here
-  #   pool 1,048,576-> 36.9 GiB  four full, but needs HALOGEN_MAX_TOK=16384
+  #   02:06:28  prompt 257978 | max_tokens clamped 8119 -> 4166
   #
-  # Device budget = MemTotal - resident weights - hostReserveGiB:
-  #   123.5 - 68.0 (w4b) - 18 (reserve) = 37.5 GiB
-  #   34.2 (pool) + 1.5 (vision tower + scratch) = 35.7 GiB -> fits, ~1.8 to spare
-  # Note it only fits at reserve 18. At 20 the budget is 35.5 and 786,432
-  # misses by 0.2 GiB, so the fitter silently drops you to 524,288. That is
-  # the whole reason those two numbers moved together here; do not tune one
-  # without the other.
+  # 262144 - 257978 = 4166 exactly. That request was pi's turn-prefix
+  # compaction summary: its budget is floor(0.5 * compaction.reserveTokens)
+  # = 8192, already trimmed by pi to 8119 because its estimate believed the
+  # prompt was 254,025 tokens. halogen handed it the 4,166 positions the
+  # window had left, HALOGEN_THINKING_ANSWER_ROOM then carved 1,024 of that
+  # for the visible answer, and the summary ran out of room mid-sentence —
+  # which pi reports as a hard failure, once for auto-compaction and again
+  # for overflow recovery:
   #
-  # CHECK IT AFTER THE FIRST START. The engine prints what it took:
-  #   journalctl --user -u halogen-flash-server -b | grep -E 'kv pool:|device budget'
-  # If it says LOWERING, this went the wrong way: drop back to 524288 rather
-  # than shaving the reserve further.
+  #   Auto-compaction failed: Turn prefix summarization failed: generation
+  #     hit the token cap and the summary is incomplete
+  #
+  # A summariser has to read close to the whole window and then WRITE inside
+  # that same window. A server whose context equals the client's window has
+  # no room for the client's own bookkeeping. Headroom above the client's
+  # window is genuinely required; the only question is who pays for it. The
+  # server-side version on this model is static YaRN (`ctx 327,680` =
+  # 1.25 x native, HALOGEN_ROPE_YARN=1.25), it was tried on 2026-10-25 and
+  # it is rolled back below, because on this box that headroom is bought out
+  # of the same RAM that carries conversation concurrency and the trade
+  # loses. The headroom therefore has to come from the client: `contextWindow
+  # ~245760` with `compaction.reserveTokens ~32768` in
+  # ~/.pi/agent/settings.json, which asks nothing of the server. Until that
+  # is applied, the failure above still happens near the top of the window.
+  #
+  # THE TRADE THAT UN-DID THIS: headroom and concurrency come out of the
+  # SAME 37.5 GiB.
+  #
+  # This was tried at ctx 327,680 on 2026-10-25 and it stalled the box.
+  # The engine's own prints give an exact cost model for this checkpoint:
+  #
+  #   786,432 positions -> ~34.0 GiB (12.4 of it not-the-pool, max_tok 32768)
+  #   983,040 positions -> needs ~37.8 GiB  -> refused, budget is 37.5
+  #   491,520 positions -> ~24.3 GiB       -> what the fitter took
+  #
+  #   need ~= intercept + 28.1 KiB x positions   (intercept 12.4 GiB at
+  #   max_tok 32768, 10.8 GiB at 16384 — that part is the prefill arena,
+  #   slot state and the vision tower, not the pool)
+  #
+  # So 983,040 never existed. What ran, both at 17:12 and again at 17:57, was:
+  #
+  #   kv pool: 983040 positions need ~37.8 GiB (plus 1.5 of margin) and
+  #            host RAM cannot spare it. LOWERING THE POOL TO 491520 (~24.3 GiB)
+  #
+  # Raising ctx to 327,680 at the same time put pool/ctx at 1.5 instead of
+  # the 3.0 the box had been running. That is not enough for a main session
+  # plus agents, and the failure is a WAIT, not an error — which is why it
+  # looked like a hang rather than a broken request:
+  #
+  #   kv pool: request 34 waits for 258189 positions: the pool holds 387328
+  #            of 491520 in 2 busy and 0 held regions; 95488 free, the
+  #            largest free gap 95488 (not enough)
+  #
+  # 15 of those in the first 25 minutes of the 17:57 start, against 2 hard
+  # stalls in the 43 hours before the change. Agents block there until one of
+  # the two running conversations ends, or until HALOGEN_QUEUE_TIMEOUT (3600s)
+  # or the 180s engine watchdog takes the container down — hence "restart it
+  # and the agents work again".
+  #
+  # THE RULE THIS LEAVES BEHIND: on a 123 GiB box in bf16 the pool maxes at
+  # ~917,600 positions (36.0 GiB usable after the fitter's 1.5 margin).
+  # Divided by ctx, that is the concurrency:
+  #
+  #   ctx 262,144 -> 3.5 conversations   (pool 851,968)
+  #   ctx 327,680 -> 2.8 conversations   (pool 917,504)  <- worse than the 3.0 you had
+  #
+  # There is no bf16 setting that buys the ctx headroom AND keeps three
+  # conversations. Only int8 does — kv8=true drops the slope to ~15.9 KiB per
+  # position, so 983,040 costs ~25.3 GiB and 1,310,720 (4 x 327,680) costs
+  # ~30.2 GiB. That is the honest upgrade path if the 327k context is ever
+  # genuinely wanted: it is paid for in answer-identity, not in RAM.
+  #
+  # STATUS: reverted to native ctx. The compaction headroom that motivated
+  # this now has to come from the client — pi's contextWindow ~245760 with
+  # compaction.reserveTokens ~32768 in ~/.pi/agent/settings.json — which is
+  # numerics-free, costs a little usable window, and leaves the pool ratio at
+  # 3.0 (or 3.5, if the pool is taken to 851,968).
+  #
+  # Do NOT re-raise contextPositions without reading the block above, and do
+  # not let pi's declared window catch up with the server's either way: if pi's
+  # model auto-discovery ever reads `context: 327680` off /health, pi will
+  # fill 327k and every number here stops being true.
+  # Kept an integer so the native comparison below needs no string->int
+  # conversion (the `lib` handed to these modules carries no stringToInt).
+  contextPositions = 262144;
+
+  # Native for this checkpoint. Anything above it requires YaRN (the
+  # entrypoint warns and refuses a big prefill arena) and `pastNative` ties
+  # the yarn factor and the arena cut to ctx so the three cannot drift.
+  nativeContext = 262144;
+  pastNative = contextPositions > nativeContext;
+  ropeYarnFactor = "1.25";
+
+  # The prefill arena. Past native the entrypoint forces this to 16384; set
+  # it here so the ~9% prefill cost is chosen rather than discovered. At
+  # native ctx it stays at 32768, which is also what keeps the 12.4 GiB
+  # non-pool intercept in the cost model above honest — the model changes if
+  # this changes.
+  prefillArenaTokens = if pastNative then "16384" else "32768";
+
+  # THE POOL.
+  #
+  # The cost model, taken from the engine's own prints on this box rather than
+  # derived — and note that an earlier version of this comment got this wrong
+  # by shrinking the non-pool term without re-adding it, which is what sent
+  # the whole thing to the fitter:
+  #
+  #   kv pool: host RAM 123 GiB, less 68.0 resident weights and 18.0
+  #            reserved for the n-gram page cache and the OS
+  #            = 37.5 GiB for the device
+  #   kv pool: 786432 positions, ~34.0 GiB (12.4 GiB of it for everything
+  #            but the pool, at max_tok 32768)
+  #
+  #   need ~= intercept + 28.1 KiB x positions
+  #   intercept = 12.4 GiB at max_tok 32768, 10.8 GiB at 16384
+  #
+  # Verified against three separate engine prints:
+  #
+  #    786,432 @32768 -> 21.6 + 12.4 = 34.0 GiB   (printed 34.0)
+  #    983,040 @16384 -> 26.5 + 10.8 = 37.3 GiB   (printed 37.8, refused)
+  #    491,520 @16384 -> 13.2 + 10.8 = 24.0 GiB   (printed 24.3, what it fell back to)
+  #
+  # The fitter's test is `need + 1.5 <= 37.5`, so 36.0 GiB is the ceiling:
+  #
+  #   bf16 pool ceiling ~= (36.0 - intercept) / 28.1 KiB
+  #                   = 917,600 positions at max_tok 16384
+  #                   = 851,700 positions at max_tok 32768
+  #
+  # 786,432 is kept: it is the value that ran here for weeks, 2.0 GiB inside
+  # the budget, at 3.0 x ctx — which is the concurrency a main session plus
+  # agents needs. 851,968 (3.25 x ctx) also fits but on 0.7 GiB of margin,
+  # which one heavier vision charge eats; not worth the thinness when the
+  # fitter's fallback is a 1.5x pool and a stalled box.
+  #
+  # CHECK IT AFTER THE FIRST START; the fitter outvotes the arithmetic above:
+  #
+  #   journalctl --user -u halogen-flash-server -b \
+  #     | grep -E 'kv pool:|KV budget|[Ll]ower'
+  #   curl -s localhost:8731/health \
+  #     | grep -oE '"(context|slot_ctx|kv_pool_positions|kv_cache|rope_scaling)":[^,]*'
+  #
+  # Any "LOWERING THE POOL" line means the ask did not fit and concurrency is
+  # now worse than this comment claims — read the number it took and go back
+  # down here rather than shaving hostReserveGiB. And watch for the queueing
+  # signature in the journal; that is what a stall looks like:
+  #
+  #   grep -c 'kv pool: request .* waits for' <this boot's log>
+  #
+  # A handful an hour is normal pressure at 3 conversations. More than that,
+  # or any "forgetting no held region could make any", is the box saying the
+  # pool is too small for what is being asked of it.
   #
   # Throughput at any of these sizes (upstream-measured):
   #   1 stream alone ~41 t/s (speculative) | 4 streams ~76 total, 18.7 each
   #   | 8 streams ~85 total, 10.9 each; past 8 the total stops growing.
-  kvPoolPositions = "786432";
+  kvPoolPositions = "786432";   # 3.0 x contextPositions
 
   # Left free on top of the weights when the engine sizes the pool at startup.
   # Too little and the server starts, answers short prompts, then crawls on
   # long ones with the disk busy — that is the n-gram table being starved.
-  # 18 is what 786,432 needs (see above). If long prompts start crawling,
-  # this is the knob to raise — and the pool is the knob to lower with it.
+  # 18 is the number the whole 37.5 GiB device budget above is built from, so
+  # every pool number in this file is only true at this reserve. If long
+  # prompts start crawling, this is the knob to raise — and the pool is the
+  # knob to lower with it; they moved together before and they still do.
   hostReserveGiB = "18";
 
   # Conversations generating at once. Not the memory knob (a slot is ~115 MB);
@@ -126,9 +263,24 @@ let
   # except the ability to break clients. Keep the cap at or above what clients
   # send. 65536 is upstream's default and matches pi exactly.
   #
+  # CAREFUL with "already safe". The clamp protects RAM; it does not protect
+  # the reply. A clamped budget the model then fills comes back
+  # finish_reason=length, and pi reads that as a failed compaction — "generation
+  # hit the token cap and the summary is incomplete" — or as a truncated
+  # answer. The clamp makes the request run; it does not make the response
+  # complete. That distinction is what the ctx headroom above is for.
+  #
   # If you ever genuinely want smaller reservations, change what pi ASKS for
   # (its maxTokens per model), not the server cap. That shrinks the actual
   # reservation; the cap only refuses it.
+  #
+  # NOT SET ON PURPOSE: HALOGEN_THINKING_ANSWER_ROOM (default
+  # max(1024, 15% of max_tokens)). Raising it looks like a cheap fix for the
+  # truncated summary and is not one. The room is a FLOOR for the answer, so
+  # in a 4,166-token squeeze a fixed 4096 leaves 70 tokens of thinking — and
+  # worse, any request that asks for less than the room (pi's 2-token probes,
+  # title calls, small budgets) gets its thinking capped at 1 token, for
+  # every client, globally. Fix the headroom instead of the carve-out.
   #
   # The default is inert for pi and still worth setting: it only applies to
   # requests that name no budget, and 16384 is upstream's recommendation for
@@ -147,6 +299,13 @@ let
   # HALOGEN_MAX_TOK=16384 (~9% off prefill) to fit alongside an 18 GiB
   # reserve. At 8-bit the same pool lands around 29 GiB and fits the 37.5 GiB
   # budget with real room, keeping MAX_TOK at 32768.
+  #
+  # And if the 327,680 context is ever wanted again, int8 is the only way to
+  # afford it without losing concurrency: 983,040 positions at 8-bit is
+  # ~14.5 GiB of pool instead of 26.5, so the device figure drops to ~25 GiB
+  # and four full-length conversations at 1,310,720 positions come to ~30 GiB
+  # — inside the 37.5 GiB budget with room. Still off, because that is a
+  # second change to the answers on a box that is not asking for either.
   #
   # LEFT OFF ON PURPOSE, not forgotten. With drafting on it is not
   # byte-identical to the 16-bit cache: perplexity moves -0.3% to +0.5% and
@@ -202,11 +361,18 @@ let
   #
   # HALOGEN_KV_POOL_FIT=1 is deliberate: the engine measures the device budget
   # at startup and lowers the pool rather than failing the start. Asking for
-  # 524288 with the fitter on degrades gracefully; asking for it with the
-  # fitter off risks a hard allocation failure mid-boot.
+  # more than fits degrades gracefully with the fitter on (that is exactly
+  # what happened on 2026-10-25, when 983,040 became 491,520); with the
+  # fitter off the same ask risks a hard allocation failure mid-boot. It also
+  # means the pool in the running container is NOT necessarily the pool in
+  # this file — read it back with the health check below, every time.
   halogenEnv =
     [
       "HALOGEN_API_PORT=8731"
+      # One request's window, the prefill arena, and the yarn factor that lets
+      # the window go past native. See the headroom note above the knobs.
+      "HALOGEN_CTX=${toString contextPositions}"
+      "HALOGEN_MAX_TOK=${prefillArenaTokens}"
       "HALOGEN_KV_POOL_POSITIONS=${kvPoolPositions}"
       "HALOGEN_KV_POOL_FIT=1"
       "HALOGEN_HOST_RESERVE_GIB=${hostReserveGiB}"
@@ -219,6 +385,7 @@ let
       "HALOGEN_VISION_TOWER=1"
       "HALOGEN_VISION_MAX_PIXELS=${visionMaxPixels}"
     ]
+    ++ lib.optionals pastNative [ "HALOGEN_ROPE_YARN=${ropeYarnFactor}" ]
     ++ lib.optionals kv8 [ "HALOGEN_KV8=1" ]
     ++ lib.optionals halogenDownload [ "HALOGEN_DOWNLOAD=${weightsRepo}" ];
 
@@ -380,6 +547,8 @@ in
   # ...and live, without touching anything:
   #
   #   curl -s localhost:8731/health | grep -o '"kv_pool_positions":[0-9]*'
+  #   curl -s localhost:8731/health | grep -o '"context":[0-9]*'
+  #   curl -s localhost:8731/health | grep -o '"rope_scaling":[^,]*'   # {"type":"yarn",...} not null
   #   curl -s localhost:8731/health | grep -o '"kv_cache":"[a-z0-9]*"'   # bf16 or int8 (kv8)
   #   curl -s localhost:8731/health | grep -o '"vision":{[^}]*'
   #   curl -s localhost:8731/health | grep -o '"max_tokens_default":[0-9]*'
