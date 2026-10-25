@@ -404,11 +404,11 @@
         "termbox2": "termbox2"
       },
       "locked": {
-        "lastModified": 1792526288,
-        "narHash": "sha256-7z0GFrjxJ50+4U9GotlvhjWQVvxeLXyIyav9AUySPb0=",
+        "lastModified": 1793044731,
+        "narHash": "sha256-6Y2Psj/QAEY9/Cld9H5AgLeym60vMGhTs3r2wxwPhaI=",
         "owner": "alexfneves",
         "repo": "herdr_session",
-        "rev": "02c9cedc90b2545f3895e14156f9ed345f642c18",
+        "rev": "2dedf0aa0b576f53fc7cf91b4cdfaa93d492865d",
         "type": "github"
       },
       "original": {
