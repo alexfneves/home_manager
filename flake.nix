@@ -363,6 +363,7 @@ EOS
       hosts = {
         gmktec = import ./hosts/gmktec.nix { inherit pkgs; };
         work-notebook = import ./hosts/work-notebook.nix { inherit pkgs; };
+        yosemite = import ./hosts/yosemite.nix { inherit pkgs; };
       };
     in {
       # Directly buildable/testable: `nix build .#ollama-git-rocm`
@@ -392,6 +393,7 @@ EOS
       homeConfigurations = {
         "${hosts.gmktec.username}@${hosts.gmktec.hostname}" = mkHome hosts.gmktec;
         "${hosts.work-notebook.username}@${hosts.work-notebook.hostname}" = mkHome hosts.work-notebook;
+        "${hosts.yosemite.username}@${hosts.yosemite.hostname}" = mkHome hosts.yosemite;
       };
     };
 }
