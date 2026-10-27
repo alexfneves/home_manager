@@ -35,10 +35,23 @@
 # Note: the monitored unit set is compiled into the binary, not configured — see
 # the README's "The monitored unit set is compiled in, not configured".
 {
-  imports = [ inputs.home-dashboard.homeManagerModules.default ];
+  # Guard the import on the LLM stack flag. `home-dashboard` is a PRIVATE repo
+  # fetched over git+ssh, so an unguarded `imports` forces every host to have a
+  # working github SSH key just to evaluate its own config. The dashboard only
+  # makes sense on gmktec (the LLM box), so on the work notebook and on
+  # yosemite - both enableLlm = false - Nix never touches the input at all.
+  imports = lib.optionals (hostConfig.enableLlm or false) [
+    inputs.home-dashboard.homeManagerModules.default
+  ];
 
-  services.home-dashboard = {
-    enable = hostConfig.enableLlm;
-    publicHosts = [ "home-dashboard.alexfneves.com" ];
+  # optionalAttrs, NOT mkIf: with the LLM stack off the dashboard module is not
+  # imported at all, so `services.home-dashboard` is not a declared option here -
+  # and a mkIf definition is still rejected as an unknown option even when its
+  # condition is false. optionalAttrs simply produces no definition.
+  config = lib.optionalAttrs (hostConfig.enableLlm or false) {
+    services.home-dashboard = {
+      enable = true;
+      publicHosts = [ "home-dashboard.alexfneves.com" ];
+    };
   };
 }
