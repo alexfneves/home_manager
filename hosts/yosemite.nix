@@ -24,9 +24,10 @@
   # modules/clean-nix-for-ubuntu.nix is Ubuntu-specific - off on NixOS.
   enableCleanNixEnv = false;
 
-  # Run the nws workspace daemon (modules/nws.nix) as a systemd user unit.
-  # afn has `linger` enabled on yosemite, so it starts without a login.
-  enableNws = true;
+  # nws runs on yosemite from the NixOS config (nixosModules.default in
+  # ~/gits/yosemite), for every user. Keep this off here, or afn would run two
+  # daemons that both want the default control port.
+  enableNws = false;
 
   extraPackages = with pkgs; [
     drawio
