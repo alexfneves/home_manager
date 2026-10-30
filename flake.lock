@@ -932,11 +932,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792160479,
-        "narHash": "sha256-gO6vJSw087k76x/IiHTR/aTLMMsgXd166WsSfSpukHo=",
+        "lastModified": 1793357519,
+        "narHash": "sha256-1tbWcyjvQt8RugD5bwKd9d+c/MuIY3+CQpUNSg1eYs8=",
         "owner": "alexfneves",
         "repo": "nws",
-        "rev": "cfc0d189117e9e80b57132fc2dd7a06ce4f21f7e",
+        "rev": "5246b244f79709e1107e1dd8dc6b2df006649500",
         "type": "github"
       },
       "original": {
