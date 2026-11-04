@@ -24,10 +24,10 @@
   # modules/clean-nix-for-ubuntu.nix is Ubuntu-specific - off on NixOS.
   enableCleanNixEnv = false;
 
-  # nws runs on yosemite from the NixOS config (nixosModules.default in
-  # ~/gits/yosemite), for every user. Keep this off here, or afn would run two
-  # daemons that both want the default control port.
-  enableNws = false;
+  # nws now runs from home-manager for afn on yosemite. The NixOS module that
+  # used to run it for every account is removed in the same change, so there
+  # is no second daemon.
+  enableNws = true;
 
   extraPackages = with pkgs; [
     drawio
