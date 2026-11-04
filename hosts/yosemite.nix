@@ -24,10 +24,9 @@
   # modules/clean-nix-for-ubuntu.nix is Ubuntu-specific - off on NixOS.
   enableCleanNixEnv = false;
 
-  # nws now runs from home-manager for afn on yosemite. The NixOS module that
-  # used to run it for every account is removed in the same change, so there
-  # is no second daemon.
-  enableNws = true;
+  # nws does not run as a host daemon on yosemite. It is available only inside
+  # a `jail` session, which starts its own daemon.
+  enableNws = false;
 
   extraPackages = with pkgs; [
     drawio
