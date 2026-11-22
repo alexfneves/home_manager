@@ -38,5 +38,6 @@
     proton-vpn
     python3
     discord
+    claude-code
   ];
 }
